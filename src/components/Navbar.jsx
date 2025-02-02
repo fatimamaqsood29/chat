@@ -1,23 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaHome, FaUserFriends, FaComments, FaSun, FaMoon } from 'react-icons/fa';
+import { useThemeContext } from '../ThemeContext';
 
 export default function Navbar() {
-    const [darkMode, setDarkMode] = useState(false);
-
-  useEffect(() => {
-    // Check the system's theme preference and set initial state
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setDarkMode(prefersDark);
-    if (prefersDark) {
-      document.documentElement.classList.add('dark');
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle('dark');
-  };
+  const { darkMode, toggleTheme } = useThemeContext();
 
   return (
     <nav className="bg-white dark:bg-gray-800 shadow-lg">
@@ -34,10 +21,7 @@ export default function Navbar() {
           </Link>
           <Link to="/chat" className="flex items-center text-gray-700 dark:text-white hover:text-blue-500">
             <FaComments className="mr-2" /> Chat
-            <h1 class="font-poppins">This headline will use Poppins.</h1>
-
           </Link>
-          
         </div>
       </div>
     </nav>

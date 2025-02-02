@@ -3,15 +3,20 @@ import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaPaperPlane } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import { Box, TextField, IconButton, Avatar, Typography, InputAdornment } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import { useThemeContext } from '../ThemeContext';
 
 export default function Chat() {
   const { userId } = useParams();
+  const { darkMode } = useThemeContext();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const chatUser = {
-    id: 1,
-    name: 'Alice',
+    id: userId,
+    name: userId === '1' ? 'Alice' : 'Bob',
     avatar: 'https://via.placeholder.com/150',
   };
 
@@ -32,45 +37,147 @@ export default function Chat() {
     }
   };
 
+  const handleSearch = (event) => {
+    setSearchQuery(event.target.value);
+    // Implement search functionality here
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900"
+    <Box
+      minHeight="100vh"
+      display="flex"
+      flexDirection="column"
+      bgcolor={darkMode ? 'background.default' : 'background.paper'}
     >
-      <div className="flex-1 p-4 overflow-y-auto">
+      {/* Search Bar */}
+      <Box
+        p={2}
+        borderBottom={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+        }}
+      >
+        <TextField
+          fullWidth
+          value={searchQuery}
+          onChange={handleSearch}
+          variant="outlined"
+          placeholder="Search messages..."
+          sx={{
+            backgroundColor: darkMode ? '#424242' : '#FFFFFF',
+            color: darkMode ? '#FFFFFF' : '#000',
+            borderRadius: '20px', // Rounded corners
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '20px', // Rounded corners for the input
+              height: '48px', // Increase text field size
+            },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: darkMode ? '#FFF' : '#000' }} />
+              </InputAdornment>
+            ),
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={sendMessage}
+                  sx={{
+                    color: darkMode ? '#FFF' : '#007BFF',
+                    '&:hover': {
+                      backgroundColor: 'transparent', // Remove hover background
+                    },
+                  }}
+                >
+                  <FaPaperPlane />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+
+      {/* Chat Header */}
+      <Box display="flex" alignItems="center" p={2} borderBottom={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}>
+        <Avatar src={chatUser.avatar} sx={{ width: 40, height: 40, mr: 2 }} />
+        <Typography variant="h6" color={darkMode ? 'grey.100' : 'text.primary'}>
+          {chatUser.name}
+        </Typography>
+      </Box>
+
+      {/* Chat Messages Section */}
+      <Box
+        flex="1"
+        p={4}
+        overflow="auto"
+        sx={{
+          maxHeight: 'calc(100vh - 200px)', // Adjust height for responsiveness
+          overflowY: 'auto',
+        }}
+      >
         {messages.map((msg) => (
           <motion.div
             key={msg.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className={`p-3 my-2 rounded-lg max-w-xs ${
-              msg.sender === 'me' ? 'bg-blue-500 text-white ml-auto' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white mr-auto'
-            }`}
+            style={{
+              maxWidth: '70%',
+              margin: msg.sender === 'me' ? '0 auto 10px 0' : '0 0 10px auto',
+              padding: '10px 15px',
+              borderRadius: '8px',
+              backgroundColor: msg.sender === 'me' ? '#007BFF' : darkMode ? '#424242' : '#E0E0E0',
+              color: msg.sender === 'me' ? '#FFF' : darkMode ? '#FFF' : '#000',
+              textAlign: 'left',
+            }}
           >
             {msg.text}
           </motion.div>
         ))}
-      </div>
-      <div className="border-t p-4 bg-white dark:bg-gray-800">
-        <div className="flex items-center space-x-2">
-          <input
-            type="text"
+      </Box>
+
+      {/* Message Input Section */}
+      <Box
+        p={2}
+        borderTop={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}
+        bgcolor={darkMode ? 'background.default' : 'background.paper'}
+      >
+        <Box display="flex" alignItems="center">
+          <TextField
+            fullWidth
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            variant="outlined"
             placeholder="Type a message..."
+            sx={{
+              backgroundColor: darkMode ? '#424242' : '#FFFFFF',
+              color: darkMode ? '#FFFFFF' : '#000',
+              borderRadius: '30px', // Rounded corners
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '20px', // Rounded corners for the input
+                height: '40px', // Increase text field size
+              },
+            }}
           />
-          <button
+          <IconButton
             onClick={sendMessage}
-            className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300"
+            sx={{
+              color: darkMode ? '#FFF' : '#007BFF',
+              ml: 1,
+              backgroundColor: darkMode ? '#424242' : '#E0E0E0',
+              borderRadius: '50%',
+              padding: '10px',
+              '&:hover': {
+                backgroundColor: darkMode ? '#616161' : '#BDBDBD',
+              },
+            }}
           >
             <FaPaperPlane />
-          </button>
-        </div>
-      </div>
-    </motion.div>
+          </IconButton>
+        </Box>
+      </Box>
+    </Box>
   );
 }
