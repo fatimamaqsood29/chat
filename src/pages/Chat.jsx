@@ -23,7 +23,11 @@ export default function Chat() {
   useEffect(() => {
     if (chatUser) {
       const timer = setTimeout(() => {
-        setMessages([...messages, { id: messages.length + 1, text: `Hello from ${chatUser.name}!`, sender: 'them' }]);
+        setMessages([...messages, { 
+          id: messages.length + 1, 
+          text: `Hello from ${chatUser.name}!`, 
+          sender: 'them' 
+        }]);
       }, 1000);
       return () => clearTimeout(timer);
     }
@@ -31,7 +35,11 @@ export default function Chat() {
 
   const sendMessage = () => {
     if (message.trim()) {
-      setMessages([...messages, { id: messages.length + 1, text: message, sender: 'me' }]);
+      setMessages([...messages, { 
+        id: messages.length + 1, 
+        text: message, 
+        sender: 'me' 
+      }]);
       setMessage('');
       toast.success('Message sent!');
     }
@@ -39,8 +47,11 @@ export default function Chat() {
 
   const handleSearch = (event) => {
     setSearchQuery(event.target.value);
-    // Implement search functionality here
   };
+
+  const filteredMessages = messages.filter(msg =>
+    msg.text.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <Box
@@ -51,13 +62,9 @@ export default function Chat() {
     >
       {/* Search Bar */}
       <Box
-        p={2}
+        px={2}
+        py={1}
         borderBottom={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2,
-        }}
       >
         <TextField
           fullWidth
@@ -65,29 +72,133 @@ export default function Chat() {
           onChange={handleSearch}
           variant="outlined"
           placeholder="Search messages..."
+          size="small"
           sx={{
             backgroundColor: darkMode ? '#424242' : '#FFFFFF',
-            color: darkMode ? '#FFFFFF' : '#000',
-            borderRadius: '20px', // Rounded corners
+            borderRadius: '4px',
             '& .MuiOutlinedInput-root': {
-              borderRadius: '20px', // Rounded corners for the input
-              height: '48px', // Increase text field size
+              height: '40px',
+              paddingRight: '8px',
             },
           }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ color: darkMode ? '#FFF' : '#000' }} />
+                <SearchIcon 
+                  sx={{ 
+                    color: darkMode ? '#FFFFFF80' : '#00000080', 
+                    marginRight: '8px' 
+                  }} 
+                />
               </InputAdornment>
             ),
+          }}
+        />
+      </Box>
+
+      {/* Chat Header */}
+      <Box
+        display="flex"
+        alignItems="center"
+        px={2}
+        py={1.5}
+        borderBottom={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}
+      >
+        <Avatar 
+          src={chatUser.avatar} 
+          sx={{ 
+            width: 40, 
+            height: 40, 
+            mr: 2,
+            border: `2px solid ${darkMode ? '#757575' : '#e0e0e0'}`
+          }} 
+        />
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: 600,
+            color: darkMode ? '#fff' : '#000'
+          }}
+        >
+          {chatUser.name}
+        </Typography>
+      </Box>
+
+      {/* Chat Messages Section */}
+      <Box
+        flex="1"
+        p={2}
+        sx={{
+          maxHeight: 'calc(100vh - 160px)',
+          overflowY: 'auto',
+          '&::-webkit-scrollbar': {
+            width: '6px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: darkMode ? '#424242' : '#f1f1f1',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: darkMode ? '#757575' : '#888',
+            borderRadius: '4px',
+          },
+        }}
+      >
+        {filteredMessages.map((msg) => (
+          <motion.div
+            key={msg.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              maxWidth: '70%',
+              margin: msg.sender === 'me' ? '0 auto 16px 0' : '0 0 16px auto',
+              padding: '12px 16px',
+              borderRadius: msg.sender === 'me' 
+                ? '20px 20px 0 20px' 
+                : '20px 20px 20px 0',
+              backgroundColor: msg.sender === 'me' 
+                ? (darkMode ? '#1976d2' : '#1976d2') 
+                : (darkMode ? '#424242' : '#eeeeee'),
+              color: msg.sender === 'me' ? '#fff' : (darkMode ? '#fff' : '#000'),
+              fontSize: '0.875rem',
+              lineHeight: 1.4,
+            }}
+          >
+            {msg.text}
+          </motion.div>
+        ))}
+      </Box>
+
+      {/* Message Input */}
+      <Box
+        px={2}
+        py={2}
+        borderTop={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}
+      >
+        <TextField
+          fullWidth
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+          variant="outlined"
+          placeholder="Type a message..."
+          sx={{
+            backgroundColor: darkMode ? '#424242' : '#FFFFFF',
+            borderRadius: '30px',
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '30px',
+              paddingRight: '8px',
+            },
+          }}
+          InputProps={{
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton
                   onClick={sendMessage}
                   sx={{
-                    color: darkMode ? '#FFF' : '#007BFF',
+                    color: darkMode ? '#fff' : '#1976d2',
                     '&:hover': {
-                      backgroundColor: 'transparent', // Remove hover background
+                      backgroundColor: darkMode ? '#ffffff1a' : '#1976d20a',
                     },
                   }}
                 >
@@ -97,86 +208,6 @@ export default function Chat() {
             ),
           }}
         />
-      </Box>
-
-      {/* Chat Header */}
-      <Box display="flex" alignItems="center" p={2} borderBottom={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}>
-        <Avatar src={chatUser.avatar} sx={{ width: 40, height: 40, mr: 2 }} />
-        <Typography variant="h6" color={darkMode ? 'grey.100' : 'text.primary'}>
-          {chatUser.name}
-        </Typography>
-      </Box>
-
-      {/* Chat Messages Section */}
-      <Box
-        flex="1"
-        p={4}
-        overflow="auto"
-        sx={{
-          maxHeight: 'calc(100vh - 200px)', // Adjust height for responsiveness
-          overflowY: 'auto',
-        }}
-      >
-        {messages.map((msg) => (
-          <motion.div
-            key={msg.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            style={{
-              maxWidth: '70%',
-              margin: msg.sender === 'me' ? '0 auto 10px 0' : '0 0 10px auto',
-              padding: '10px 15px',
-              borderRadius: '8px',
-              backgroundColor: msg.sender === 'me' ? '#007BFF' : darkMode ? '#424242' : '#E0E0E0',
-              color: msg.sender === 'me' ? '#FFF' : darkMode ? '#FFF' : '#000',
-              textAlign: 'left',
-            }}
-          >
-            {msg.text}
-          </motion.div>
-        ))}
-      </Box>
-
-      {/* Message Input Section */}
-      <Box
-        p={2}
-        borderTop={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}
-        bgcolor={darkMode ? 'background.default' : 'background.paper'}
-      >
-        <Box display="flex" alignItems="center">
-          <TextField
-            fullWidth
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            variant="outlined"
-            placeholder="Type a message..."
-            sx={{
-              backgroundColor: darkMode ? '#424242' : '#FFFFFF',
-              color: darkMode ? '#FFFFFF' : '#000',
-              borderRadius: '30px', // Rounded corners
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '20px', // Rounded corners for the input
-                height: '40px', // Increase text field size
-              },
-            }}
-          />
-          <IconButton
-            onClick={sendMessage}
-            sx={{
-              color: darkMode ? '#FFF' : '#007BFF',
-              ml: 1,
-              backgroundColor: darkMode ? '#424242' : '#E0E0E0',
-              borderRadius: '50%',
-              padding: '10px',
-              '&:hover': {
-                backgroundColor: darkMode ? '#616161' : '#BDBDBD',
-              },
-            }}
-          >
-            <FaPaperPlane />
-          </IconButton>
-        </Box>
       </Box>
     </Box>
   );
