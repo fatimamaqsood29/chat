@@ -4,15 +4,15 @@ import {
   Avatar,
   IconButton,
   Typography,
-  Button,
   Grid,
+  Button,
 } from '@mui/material';
-import { PhotoCamera } from '@mui/icons-material';
+import { PhotoCamera, Add } from '@mui/icons-material';
 
 function ProfileScreen() {
   const [previewImage, setPreviewImage] = useState('');
   const [bio, setBio] = useState('');
-  const [highlights, setHighlights] = useState([]); // Store uploaded highlights
+  const [highlights, setHighlights] = useState([]);
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -21,10 +21,17 @@ function ProfileScreen() {
     }
   };
 
-  const handleHighlightUpload = (event) => {
-    const files = Array.from(event.target.files);
-    const filePreviews = files.map((file) => URL.createObjectURL(file));
-    setHighlights([...highlights, ...filePreviews]);
+  const handleHighlightUpload = (event, index) => {
+    const file = event.target.files[0];
+    if (file) {
+      const newHighlights = [...highlights];
+      newHighlights[index] = URL.createObjectURL(file);
+      setHighlights(newHighlights);
+    }
+  };
+
+  const addNewHighlightSlot = () => {
+    setHighlights([...highlights, null]);
   };
 
   return (
@@ -91,36 +98,59 @@ function ProfileScreen() {
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
+                  backgroundColor: '#f0f0f0',
                   border: '2px solid #ddd',
+                  position: 'relative',
                 }}
               >
-                <img
-                  src={highlight}
-                  alt={`Highlight ${index + 1}`}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
+                {highlight ? (
+                  <img
+                    src={highlight}
+                    alt={`Highlight ${index + 1}`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <IconButton
+                    component="label"
+                    sx={{
+                      position: 'absolute',
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Add sx={{ fontSize: 40 }} />
+                    <input
+                      type="file"
+                      accept="image/,video/"
+                      onChange={(event) => handleHighlightUpload(event, index)}
+                      hidden
+                    />
+                  </IconButton>
+                )}
               </Box>
             </Grid>
           ))}
+          {/* Add New Highlight Slot */}
+          <Grid item>
+            <IconButton
+              onClick={addNewHighlightSlot}
+              sx={{
+                width: 100,
+                height: 100,
+                borderRadius: '50%',
+                backgroundColor: '#ddd',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Add sx={{ fontSize: 40 }} />
+            </IconButton>
+          </Grid>
         </Grid>
-
-        {/* Highlight Upload Button */}
-        <Box mt={2} textAlign="center">
-          <Button
-            component="label"
-            variant="contained"
-            color="primary"
-          >
-            Add Highlight Image/Reel
-            <input
-              type="file"
-              accept="image/,video/"
-              multiple
-              onChange={handleHighlightUpload}
-              hidden
-            />
-          </Button>
-        </Box>
       </Box>
     </Box>
   );
