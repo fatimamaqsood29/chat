@@ -21,9 +21,31 @@ export default function Login() {
 
   const { darkMode } = useThemeContext();
 
-  const onSubmit = (data) => {
-    toast.success('Logged in successfully!');
-    navigate('/follow');
+  const onSubmit = async (data) => {
+    toast.loading('Logging in...');
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+            });
+
+      const result = await response.json();
+      toast.dismiss();
+
+      if (response.ok) {
+        toast.success('Logged in successfully!');
+        navigate('/follow'); // Navigate to your desired page after login
+      } else {
+        toast.error(result.message || 'Login failed. Please check your credentials.');
+      }
+    } catch (error) {
+      toast.dismiss();
+      toast.error('An error occurred. Please try again.');
+    }
   };
 
   return (

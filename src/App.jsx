@@ -1,12 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast'; // Import toast provider
 import Login from './components/Login';
 import Signup from './components/Signup';
 import Follow from './pages/Follow';
 import Chat from './pages/Chat';
 import Navbar from './components/Navbar';
 import ProfileScreen from './components/ProfileScreen';
-
 import { ThemeProviderWrapper } from './ThemeContext';
 
 export default function App() {
@@ -15,6 +15,8 @@ export default function App() {
       <Router>
         <div className="min-h-screen">
           <Navbar />
+          {/* Toast notifications */}
+          <Toaster position="top-right" reverseOrder={false} />
           <Routes>
             <Route path="/" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
@@ -22,7 +24,6 @@ export default function App() {
             <Route path="/follow" element={<Follow />} />
             <Route path="/chat/:userId" element={<Chat />} />
             <Route path="/profile" element={<ProfileScreen />} />
-
           </Routes>
         </div>
       </Router>
