@@ -8,6 +8,8 @@ import {
   Button,
 } from '@mui/material';
 import { PhotoCamera, VideoLibrary, Add } from '@mui/icons-material';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function ProfileScreen() {
   const [previewImage, setPreviewImage] = useState('');
@@ -20,6 +22,7 @@ function ProfileScreen() {
     const file = event.target.files[0];
     if (file) {
       setPreviewImage(URL.createObjectURL(file));
+      toast.success('Profile picture updated successfully!');
     }
   };
 
@@ -32,6 +35,7 @@ function ProfileScreen() {
         type,
       };
       setHighlights(newHighlights);
+      toast.success('Highlight uploaded successfully!');
     }
   };
 
@@ -41,9 +45,11 @@ function ProfileScreen() {
       if (type === 'image') {
         const newImages = files.map(file => URL.createObjectURL(file));
         setUploadedImages(prevImages => [...prevImages, ...newImages]);
+        toast.success(`${files.length} image(s) uploaded successfully!`);
       } else if (type === 'reel') {
         const newReels = files.map(file => URL.createObjectURL(file));
         setUploadedReels(prevReels => [...prevReels, ...newReels]);
+        toast.success(`${files.length} reel(s) uploaded successfully!`);
       }
     }
   };
@@ -54,6 +60,8 @@ function ProfileScreen() {
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center" p={4}>
+      <ToastContainer position="top-right" autoClose={3000} />
+      
       <Box display="flex" alignItems="center" justifyContent="space-around" width="100%">
         <Box display="flex" alignItems="center" gap={3}>
           <Box textAlign="center">

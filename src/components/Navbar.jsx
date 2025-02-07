@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaUserFriends, FaComments, FaSun, FaMoon, FaUser } from 'react-icons/fa';
+import { FaUserFriends, FaComments, FaSun, FaMoon, FaUser, FaHome } from 'react-icons/fa';
 import { useThemeContext } from '../ThemeContext';
 
 export default function Navbar() {
@@ -16,9 +16,16 @@ export default function Navbar() {
 
         {/* Navigation Links */}
         <div className="flex items-center space-x-6">
+          <Link to="/" className="flex items-center hover:text-blue-500">
+            <FaHome className="mr-2" /> Home
+          </Link>
           <Link to="/follow" className="flex items-center hover:text-blue-500">
             <FaUserFriends className="mr-2" /> Follow
           </Link>
+          <Link to="/second" className="flex items-center hover:text-blue-500">
+            <FaUserFriends className="mr-2" /> Second
+          </Link>
+
           <Link to="/chat" className="flex items-center hover:text-blue-500">
             <FaComments className="mr-2" /> Chat
           </Link>
