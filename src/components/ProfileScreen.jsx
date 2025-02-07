@@ -55,24 +55,7 @@ function ProfileScreen() {
   return (
     <Box display="flex" flexDirection="column" alignItems="center" p={4}>
       <Box display="flex" alignItems="center" justifyContent="space-around" width="100%">
-        {/* Statistics Section
-        <Box textAlign="center">
-          <Typography variant="h6">Statistics</Typography>
-          <Box mt={2}>
-            <Typography variant="h6">{uploadedImages.length}</Typography>
-            <Typography variant="body2">Posts</Typography>
-          </Box>
-          <Box mt={2}>
-            <Typography variant="h6">50</Typography>
-            <Typography variant="body2">Followers</Typography>
-          </Box>
-          <Box mt={2}>
-            <Typography variant="h6">30</Typography>
-            <Typography variant="body2">Following</Typography>
-          </Box>
-        </Box> */}
-                {/* Statistics Section */}
-                <Box display="flex" alignItems="center" gap={3}>
+        <Box display="flex" alignItems="center" gap={3}>
           <Box textAlign="center">
             <Typography variant="h6">{uploadedImages.length}</Typography>
             <Typography variant="body2">Posts</Typography>
@@ -87,8 +70,6 @@ function ProfileScreen() {
           </Box>
         </Box>
 
-
-        {/* Profile Image Section */}
         <Box position="relative" display="inline-block">
           <Avatar
             src={previewImage || '/default-avatar.png'}
@@ -115,7 +96,6 @@ function ProfileScreen() {
         </Box>
       </Box>
 
-      {/* Bio Section */}
       <Box mt={4} width="100%">
         <Typography variant="h6">Bio</Typography>
         <textarea
@@ -133,7 +113,6 @@ function ProfileScreen() {
         />
       </Box>
 
-      {/* Highlights Section */}
       <Box mt={4} width="100%">
         <Typography variant="h6">Highlights</Typography>
         <Grid container spacing={2} mt={2} justifyContent="center">
@@ -150,7 +129,6 @@ function ProfileScreen() {
                   alignItems: 'center',
                   backgroundColor: '#f0f0f0',
                   border: '2px solid #ddd',
-                  position: 'relative',
                 }}
               >
                 {highlight ? (
@@ -163,7 +141,6 @@ function ProfileScreen() {
                   <IconButton
                     component="label"
                     sx={{
-                      position: 'absolute',
                       width: '100%',
                       height: '100%',
                       display: 'flex',
@@ -182,25 +159,6 @@ function ProfileScreen() {
                     />
                   </IconButton>
                 )}
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: 5,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    display: 'flex',
-                    gap: '10px',
-                  }}
-                >
-                  <IconButton component="label" sx={{ backgroundColor: '#fff', borderRadius: '50%' }}>
-                    <PhotoCamera />
-                    <input type="file" accept="image/*" onChange={(event) => handleHighlightUpload(event, index, 'image')} hidden />
-                  </IconButton>
-                  <IconButton component="label" sx={{ backgroundColor: '#fff', borderRadius: '50%' }}>
-                    <VideoLibrary />
-                    <input type="file" accept="video/*" onChange={(event) => handleHighlightUpload(event, index, 'video')} hidden />
-                  </IconButton>
-                </Box>
               </Box>
             </Grid>
           ))}
