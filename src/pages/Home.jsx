@@ -31,6 +31,7 @@ const suggestions = [
 
 const Home = () => {
   const [posts, setPosts] = useState(initialPosts);
+  const [showCommentInput, setShowCommentInput] = useState({});
   const { darkMode } = useThemeContext();
 
   const toggleLike = (postId) => {
@@ -41,6 +42,10 @@ const Home = () => {
           : post
       )
     );
+  };
+
+  const toggleCommentInput = (postId) => {
+    setShowCommentInput((prev) => ({ ...prev, [postId]: !prev[postId] }));
   };
 
   const addComment = (postId, commentText) => {
@@ -88,11 +93,15 @@ const Home = () => {
                     alt="Post"
                     className="w-full mt-2 rounded-md"
                   />
-                  <div className="flex justify-between items-center mt-2">
+                  <div className="flex items-center ">
                     <button onClick={() => toggleLike(post.id)} className="text-red-500 text-lg">
                       {post.liked ? "❤️" : "🤍"}
                     </button>
+                    
                     <p className="text-sm">{post.likes} Likes</p>
+                    <button onClick={() => toggleCommentInput(post.id)} className="text-blue-500 text-lg">
+                      💬
+                    </button>
                   </div>
 
                   {/* Comment Section */}
@@ -105,26 +114,26 @@ const Home = () => {
                   </div>
 
                   {/* Comment Input */}
-                  <div className="mt-2 flex">
-                    <input
-                      type="text"
-                      placeholder="Add a comment..."
-                      className={`w-full border rounded-md p-2 text-sm ${
-                        darkMode ? "bg-gray-700 text-white" : "bg-white"
-                      }`}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          addComment(post.id, e.target.value);
-                          e.target.value = "";
-                        }
-                      }}
-                    />
-                    <button
-                      className="ml-2 bg-blue-500 text-white px-4 py-1 rounded-md"
-                    >
-                      Post
-                    </button>
-                  </div>
+                  {showCommentInput[post.id] && (
+                    <div className="mt-2 flex">
+                      <input
+                        type="text"
+                        placeholder="Add a comment..."
+                        className={`w-full border rounded-md p-2 text-sm ${
+                          darkMode ? "bg-gray-700 text-white" : "bg-white"
+                        }`}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            addComment(post.id, e.target.value);
+                            e.target.value = "";
+                          }
+                        }}
+                      />
+                      <button className="ml-2 bg-blue-500 text-white px-4 py-1 rounded-md">
+                        Post
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -136,10 +145,7 @@ const Home = () => {
               <h2 className="text-lg font-bold mb-2">Suggestions</h2>
               <div className="flex flex-col space-y-2">
                 {suggestions.map((user) => (
-                  <div
-                    key={user.id}
-                    className="flex items-center justify-between"
-                  >
+                  <div key={user.id} className="flex items-center justify-between">
                     <p className="text-sm">{user.username}</p>
                     <button className="text-blue-500 text-xs">Follow</button>
                   </div>

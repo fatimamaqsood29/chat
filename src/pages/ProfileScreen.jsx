@@ -1,18 +1,25 @@
-import { Box, Avatar, IconButton, Typography, Grid, Button } from '@mui/material';
-import { PhotoCamera, VideoLibrary, Add, Edit } from '@mui/icons-material';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  Box,
+  Avatar,
+  IconButton,
+  Typography,
+  Grid,
+  Button,
+} from "@mui/material";
+import { PhotoCamera, VideoLibrary, Add, Edit } from "@mui/icons-material";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 function ProfileScreen() {
   const navigate = useNavigate();
   const { state } = useLocation();
 
   const [profileData, setProfileData] = useState({
-    name: 'John Doe',
-    bio: localStorage.getItem('profileBio') || '',
-    profileImage: localStorage.getItem('profileImage') || '',
+    name: "John Doe",
+    bio: localStorage.getItem("profileBio") || "",
+    profileImage: localStorage.getItem("profileImage") || "",
   });
 
   const [highlights, setHighlights] = useState([]);
@@ -35,13 +42,13 @@ function ProfileScreen() {
       const objectUrl = URL.createObjectURL(file);
       setProfileData((prevData) => {
         const updatedData = { ...prevData, profileImage: objectUrl };
-        localStorage.setItem('profileImage', objectUrl);
+        localStorage.setItem("profileImage", objectUrl);
         return updatedData;
       });
-      toast.success('Profile picture updated successfully!');
-      
+      toast.success("Profile picture updated successfully!");
+
       // Clean up object URL to avoid memory leaks
-      event.target.value = '';
+      event.target.value = "";
     }
   };
 
@@ -49,7 +56,7 @@ function ProfileScreen() {
     const updatedBio = event.target.value;
     setProfileData((prevData) => {
       const updatedData = { ...prevData, bio: updatedBio };
-      localStorage.setItem('profileBio', updatedBio);
+      localStorage.setItem("profileBio", updatedBio);
       return updatedData;
     });
   };
@@ -60,18 +67,18 @@ function ProfileScreen() {
       const newHighlights = [...highlights];
       newHighlights[index] = URL.createObjectURL(file);
       setHighlights(newHighlights);
-      toast.success('Highlight uploaded successfully!');
+      toast.success("Highlight uploaded successfully!");
     }
   };
 
   const handleSeparateUpload = (event, type) => {
     const files = Array.from(event.target.files);
     if (files.length > 0) {
-      if (type === 'image') {
+      if (type === "image") {
         const newImages = files.map((file) => URL.createObjectURL(file));
         setUploadedImages((prev) => [...prev, ...newImages]);
         toast.success(`${files.length} image(s) uploaded successfully!`);
-      } else if (type === 'reel') {
+      } else if (type === "reel") {
         const newReels = files.map((file) => URL.createObjectURL(file));
         setUploadedReels((prev) => [...prev, ...newReels]);
         toast.success(`${files.length} reel(s) uploaded successfully!`);
@@ -84,7 +91,7 @@ function ProfileScreen() {
   };
 
   const navigateToEditPage = () => {
-    navigate('/edit-profile', { state: { profileData } });
+    navigate("/edit-profile", { state: { profileData } });
   };
 
   return (
@@ -93,35 +100,55 @@ function ProfileScreen() {
 
       {/* Edit Button */}
       <Box display="flex" justifyContent="flex-end" width="100%">
-        <Button variant="contained" startIcon={<Edit />} onClick={navigateToEditPage}>
+        <Button
+          variant="contained"
+          startIcon={<Edit />}
+          onClick={navigateToEditPage}
+        >
           Edit Profile
         </Button>
       </Box>
 
       {/* Profile Section */}
-      <Box display="flex" alignItems="center" justifyContent="space-between" width="100%" mt={4}>
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        width="100%"
+        mt={4}
+      >
         <Box display="flex" alignItems="center" gap={4} position="relative">
           <Avatar
-            src={profileData.profileImage || '/default-avatar.png'}
+            src={profileData.profileImage || "/default-avatar.png"}
             sx={{ width: 150, height: 150 }}
           />
           <IconButton
             component="label"
             sx={{
-              position: 'absolute',
+              position: "absolute",
               bottom: 5,
-              backgroundColor: 'white',
-              borderRadius: '50%',
+              backgroundColor: "white",
+              borderRadius: "50%",
             }}
           >
             <PhotoCamera />
-            <input type="file" accept="image/*" hidden onChange={handleImageChange} />
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={handleImageChange}
+            />
           </IconButton>
 
           <Box>
             <Typography variant="h4">{profileData.name}</Typography>
-            <Typography variant="body1" mt={1} style={{ whiteSpace: 'pre-line' }}>
-              {profileData.bio || "This is your bio. Write something about yourself!"}
+            <Typography
+              variant="body1"
+              mt={1}
+              style={{ whiteSpace: "pre-line" }}
+            >
+              {profileData.bio ||
+                "This is your bio. Write something about yourself!"}
             </Typography>
             {/* <textarea
               value={profileData.bio}
@@ -164,20 +191,24 @@ function ProfileScreen() {
                 sx={{
                   width: 100,
                   height: 100,
-                  borderRadius: '50%',
-                  overflow: 'hidden',
-                  backgroundColor: '#f0f0f0',
-                  border: '2px solid #ddd',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  backgroundColor: "#f0f0f0",
+                  border: "2px solid #ddd",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
               >
                 {highlight ? (
                   <img
                     src={highlight}
                     alt={`Highlight ${index + 1}`}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
                   />
                 ) : (
                   <IconButton component="label" sx={{ p: 0 }}>
@@ -199,11 +230,11 @@ function ProfileScreen() {
               sx={{
                 width: 100,
                 height: 100,
-                borderRadius: '50%',
-                backgroundColor: '#ddd',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
+                borderRadius: "50%",
+                backgroundColor: "#ddd",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
               }}
             >
               <Add sx={{ fontSize: 40 }} />
@@ -216,13 +247,33 @@ function ProfileScreen() {
       <Box mt={4} textAlign="center">
         <Typography variant="h6">Upload Section</Typography>
         <Box display="flex" justifyContent="center" gap="20px" mt={2}>
-          <Button variant="contained" component="label" startIcon={<PhotoCamera />}>
+          <Button
+            variant="contained"
+            component="label"
+            startIcon={<PhotoCamera />}
+          >
             Upload Image
-            <input type="file" accept="image/*" multiple hidden onChange={(event) => handleSeparateUpload(event, 'image')} />
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              onChange={(event) => handleSeparateUpload(event, "image")}
+            />
           </Button>
-          <Button variant="contained" component="label" startIcon={<VideoLibrary />}>
+          <Button
+            variant="contained"
+            component="label"
+            startIcon={<VideoLibrary />}
+          >
             Upload Reel
-            <input type="file" accept="video/*" multiple hidden onChange={(event) => handleSeparateUpload(event, 'reel')} />
+            <input
+              type="file"
+              accept="video/*"
+              multiple
+              hidden
+              onChange={(event) => handleSeparateUpload(event, "reel")}
+            />
           </Button>
         </Box>
       </Box>
@@ -238,10 +289,10 @@ function ProfileScreen() {
                     src={image}
                     alt={`Uploaded Image ${index + 1}`}
                     style={{
-                      width: '100%',
-                      maxHeight: '200px',
-                      objectFit: 'cover',
-                      borderRadius: '8px',
+                      width: "100%",
+                      maxHeight: "200px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
                     }}
                   />
                 </Grid>
@@ -259,10 +310,10 @@ function ProfileScreen() {
                     src={reel}
                     controls
                     style={{
-                      width: '100%',
-                      maxHeight: '200px',
-                      objectFit: 'cover',
-                      borderRadius: '8px',
+                      width: "100%",
+                      maxHeight: "200px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
                     }}
                   />
                 </Grid>

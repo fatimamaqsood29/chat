@@ -1,53 +1,60 @@
-import { useState } from 'react';
-import { Box, Avatar, IconButton, Typography, TextField, Button } from '@mui/material';
-import { PhotoCamera } from '@mui/icons-material';
-import { ToastContainer, toast } from 'react-toastify';
-import { useNavigate, useLocation } from 'react-router-dom';
-import 'react-toastify/dist/ReactToastify.css';
+import { useState } from "react";
+import {
+  Box,
+  Avatar,
+  IconButton,
+  Typography,
+  TextField,
+  Button,
+} from "@mui/material";
+import { PhotoCamera } from "@mui/icons-material";
+import { ToastContainer, toast } from "react-toastify";
+import { useNavigate, useLocation } from "react-router-dom";
+import "react-toastify/dist/ReactToastify.css";
 
 function EditProfileScreen() {
   const navigate = useNavigate();
   const { state } = useLocation();
 
-  const [previewImage, setPreviewImage] = useState(state?.previewImage || '');
-  const [bio, setBio] = useState(state?.bio || '');
-  const [name, setName] = useState(state?.name || '');
+  const [previewImage, setPreviewImage] = useState(state?.previewImage || "");
+  const [bio, setBio] = useState(state?.bio || "");
+  const [name, setName] = useState(state?.name || "");
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     if (file) {
       setPreviewImage(URL.createObjectURL(file));
-      toast.success('Profile picture updated successfully!');
+      toast.success("Profile picture updated successfully!");
     }
   };
 
   const handleSaveChanges = () => {
     if (!name.trim()) {
-      toast.error('Name cannot be empty!');
+      toast.error("Name cannot be empty!");
       return;
     }
 
-    toast.success('Profile updated successfully!');
-    navigate('/profile', { state: { previewImage, bio, name } });
+    toast.success("Profile updated successfully!");
+    navigate("/profile", { state: { previewImage, bio, name } });
   };
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center" p={4}>
       <ToastContainer position="top-right" autoClose={3000} />
-      
+
       <Box position="relative" display="inline-block">
         <Avatar
-          src={previewImage || '/default-avatar.png'}
+          src={previewImage || "/default-avatar.png"}
           sx={{ width: 150, height: 150 }}
         />
         <IconButton
           component="label"
           sx={{
-            position: 'absolute',
+            position: "absolute",
             bottom: 0,
             right: 0,
-            backgroundColor: 'white',
-            borderRadius: '50%',
+            backgroundColor: "white",
+            borderRadius: "50%",
           }}
         >
           <PhotoCamera />

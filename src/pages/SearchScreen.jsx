@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { FaTimes } from 'react-icons/fa';
+import { useThemeContext } from '../ThemeContext';
 
 export default function SearchScreen({ onClose }) {
+  const { darkMode } = useThemeContext();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
 
@@ -28,7 +30,7 @@ export default function SearchScreen({ onClose }) {
   };
 
   return (
-    <div className="h-full">
+    <div className={`h-full p-4 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold">Search</h2>
         <button onClick={onClose} className="text-2xl">
@@ -41,14 +43,14 @@ export default function SearchScreen({ onClose }) {
         value={query}
         onChange={handleSearch}
         placeholder="Search users"
-        className="w-full p-3 border rounded-md focus:outline-none"
+        className={`w-full p-3 border rounded-md focus:outline-none ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}
       />
 
       <div className="mt-4">
         {results.length > 0 ? (
           <ul>
             {results.map((user) => (
-              <li key={user.id} className="flex justify-between p-2 border-b">
+              <li key={user.id} className={`flex justify-between p-2 border-b ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
                 <span>
                   {user.username} ({user.fullName})
                 </span>
@@ -62,7 +64,7 @@ export default function SearchScreen({ onClose }) {
             <h3 className="text-lg font-semibold">Recent</h3>
             <ul>
               {recentSearches.map((user) => (
-                <li key={user.id} className="flex justify-between p-2 border-b">
+                <li key={user.id} className={`flex justify-between p-2 border-b ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
                   <span>
                     {user.username} ({user.fullName})
                   </span>
