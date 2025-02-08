@@ -1,9 +1,9 @@
-import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Avatar, IconButton, Typography, Grid, Button } from '@mui/material';
-import { PhotoCamera, VideoLibrary, Add } from '@mui/icons-material';
+import { PhotoCamera, VideoLibrary, Add, Edit } from '@mui/icons-material';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function ProfileScreen() {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ function ProfileScreen() {
       setProfileData({
         name: state.name || profileData.name,
         bio: state.bio || profileData.bio,
-        profileImage: state.previewImage || profileData.profileImage,
+        profileImage: state.profileImage || profileData.profileImage,
       });
     }
   }, [state]);
@@ -32,8 +32,12 @@ function ProfileScreen() {
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     if (file) {
-      setProfileData({ ...profileData, profileImage: URL.createObjectURL(file) });
+      const objectUrl = URL.createObjectURL(file);
+      setProfileData((prevData) => ({ ...prevData, profileImage: objectUrl }));
       toast.success('Profile picture updated successfully!');
+      
+      // Clean up object URL to avoid memory leaks
+      event.target.value = '';
     }
   };
 
@@ -66,13 +70,51 @@ function ProfileScreen() {
     setHighlights([...highlights, null]);
   };
 
+  const navigateToEditPage = () => {
+    navigate('/edit-profile', { state: { profileData } });
+  };
+
   return (
     <Box display="flex" flexDirection="column" alignItems="center" p={4}>
       <ToastContainer position="top-right" autoClose={3000} />
 
-      {/* Profile Stats and Avatar Section */}
+      {/* Edit Button */}
+      <Box display="flex" justifyContent="flex-end" width="100%">
+        <Button variant="contained" startIcon={<Edit />} onClick={navigateToEditPage}>
+          Edit Profile
+        </Button>
+      </Box>
+
+      {/* Profile Section */}
       <Box display="flex" alignItems="center" justifyContent="space-between" width="100%" mt={4}>
-        <Box display="flex" justifyContent="space-around" width="100%">
+        <Box display="flex" alignItems="center" gap={4} position="relative">
+          <Avatar
+            src={profileData.profileImage || '/default-avatar.png'}
+            sx={{ width: 150, height: 150 }}
+          />
+          <IconButton
+            component="label"
+            sx={{
+              position: 'absolute',
+              bottom: 5,
+              
+              backgroundColor: 'white',
+              borderRadius: '50%',
+            }}
+          >
+            <PhotoCamera />
+            <input type="file" accept="image/*" hidden onChange={handleImageChange} />
+          </IconButton>
+
+          <Box>
+            <Typography variant="h4">{profileData.name}</Typography>
+            <Typography variant="body1" mt={1} style={{ whiteSpace: 'pre-line' }}>
+              {profileData.bio || "This is your bio. Write something about yourself!"}
+            </Typography>
+          </Box>
+        </Box>
+
+        <Box display="flex" justifyContent="space-around" width="50%">
           <Box textAlign="center">
             <Typography variant="h6">{uploadedImages.length}</Typography>
             <Typography variant="body2">Posts</Typography>
@@ -86,45 +128,10 @@ function ProfileScreen() {
             <Typography variant="body2">Following</Typography>
           </Box>
         </Box>
-        <Box position="relative">
-          <Avatar
-            src={profileData.profileImage || '/default-avatar.png'}
-            sx={{ width: 150, height: 150 }}
-          />
-          <IconButton component="label" sx={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: 'white' }}>
-            <PhotoCamera />
-            <input type="file" accept="image/*" hidden onChange={handleImageChange} />
-          </IconButton>
-        </Box>
       </Box>
 
-      <Typography variant="h4" mt={2}>{profileData.name}</Typography>
-      <textarea
-        value={profileData.bio}
-        onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
-        placeholder="Write something about yourself..."
-        rows="4"
-        style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', resize: 'none' }}
-      />
-
-      <Button
-        variant="contained"
-        sx={{ mt: 4 }}
-        onClick={() =>
-          navigate('/edit-profile', {
-            state: {
-              name: profileData.name,
-              bio: profileData.bio,
-              previewImage: profileData.profileImage,
-            },
-          })
-        }
-      >
-        Edit Profile
-      </Button>
-
       {/* Highlights Section */}
-      <Box mt={4}>
+      <Box mt={4} width="100%">
         <Typography variant="h6">Highlights</Typography>
         <Grid container spacing={2} mt={2}>
           {highlights.map((highlight, index) => (
@@ -137,32 +144,46 @@ function ProfileScreen() {
                   overflow: 'hidden',
                   backgroundColor: '#f0f0f0',
                   border: '2px solid #ddd',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
                 }}
               >
                 {highlight ? (
-                  <img src={highlight} alt={`Highlight ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img
+                    src={highlight}
+                    alt={`Highlight ${index + 1}`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
                 ) : (
-                  <IconButton component="label">
-                    <Add />
-                    <input type="file" accept="image/*" hidden onChange={(event) => handleHighlightUpload(event, index)} />
+                  <IconButton component="label" sx={{ p: 0 }}>
+                    <Add sx={{ fontSize: 40 }} />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(event) => handleHighlightUpload(event, index)}
+                    />
                   </IconButton>
                 )}
               </Box>
             </Grid>
           ))}
           <Grid item>
-          <IconButton
-        onClick={addNewHighlightSlot}
-        sx={{
-          width: 100,
-          height: 100,
-          borderRadius: '50%',
-          backgroundColor: '#ddd',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      />
+            <IconButton
+              onClick={addNewHighlightSlot}
+              sx={{
+                width: 100,
+                height: 100,
+                borderRadius: '50%',
+                backgroundColor: '#ddd',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Add sx={{ fontSize: 40 }} />
+            </IconButton>
           </Grid>
         </Grid>
       </Box>
@@ -181,6 +202,7 @@ function ProfileScreen() {
           </Button>
         </Box>
       </Box>
+
       <Box mt={4} width="100%">
         {uploadedImages.length > 0 && (
           <Box mt={2}>
@@ -225,7 +247,6 @@ function ProfileScreen() {
           </Box>
         )}
       </Box>
-
     </Box>
   );
 }
