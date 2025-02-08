@@ -11,8 +11,8 @@ function ProfileScreen() {
 
   const [profileData, setProfileData] = useState({
     name: 'John Doe',
-    bio: '',
-    profileImage: '',
+    bio: localStorage.getItem('profileBio') || '',
+    profileImage: localStorage.getItem('profileImage') || '',
   });
 
   const [highlights, setHighlights] = useState([]);
@@ -21,11 +21,11 @@ function ProfileScreen() {
 
   useEffect(() => {
     if (state) {
-      setProfileData({
-        name: state.name || profileData.name,
-        bio: state.bio || profileData.bio,
-        profileImage: state.profileImage || profileData.profileImage,
-      });
+      setProfileData((prevData) => ({
+        name: state.name || prevData.name,
+        bio: state.bio || prevData.bio,
+        profileImage: state.profileImage || prevData.profileImage,
+      }));
     }
   }, [state]);
 
@@ -33,12 +33,25 @@ function ProfileScreen() {
     const file = event.target.files[0];
     if (file) {
       const objectUrl = URL.createObjectURL(file);
-      setProfileData((prevData) => ({ ...prevData, profileImage: objectUrl }));
+      setProfileData((prevData) => {
+        const updatedData = { ...prevData, profileImage: objectUrl };
+        localStorage.setItem('profileImage', objectUrl);
+        return updatedData;
+      });
       toast.success('Profile picture updated successfully!');
       
       // Clean up object URL to avoid memory leaks
       event.target.value = '';
     }
+  };
+
+  const handleBioChange = (event) => {
+    const updatedBio = event.target.value;
+    setProfileData((prevData) => {
+      const updatedData = { ...prevData, bio: updatedBio };
+      localStorage.setItem('profileBio', updatedBio);
+      return updatedData;
+    });
   };
 
   const handleHighlightUpload = (event, index) => {
@@ -97,7 +110,6 @@ function ProfileScreen() {
             sx={{
               position: 'absolute',
               bottom: 5,
-              
               backgroundColor: 'white',
               borderRadius: '50%',
             }}
@@ -111,6 +123,18 @@ function ProfileScreen() {
             <Typography variant="body1" mt={1} style={{ whiteSpace: 'pre-line' }}>
               {profileData.bio || "This is your bio. Write something about yourself!"}
             </Typography>
+            {/* <textarea
+              value={profileData.bio}
+              onChange={handleBioChange}
+              placeholder="Update your bio..."
+              style={{
+                width: '100%',
+                padding: '10px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                marginTop: '10px',
+              }}
+            /> */}
           </Box>
         </Box>
 
