@@ -18,21 +18,28 @@ export default function App() {
   return (
     <ThemeProviderWrapper>
       <Router>
-        <div className="min-h-screen flex">
-          {/* Navigation Bar */}
+        <div className="min-h-screen flex relative">
+          {/* Fixed Navigation Bar */}
           <div className="w-64 h-screen fixed left-0">
-            <Navbar setIsSearchOpen={setIsSearchOpen} />
+            <Navbar
+              setIsSearchOpen={setIsSearchOpen}
+              isSearchOpen={isSearchOpen}
+            />
           </div>
 
-          {/* Search Column */}
+          {/* Search Overlay on Left Side (adjacent to the navbar) */}
           {isSearchOpen && (
-            <div className="w-96 h-screen border-l border-r p-4">
+            <div className="fixed top-0 left-19 w-96 h-screen border-r p-4 bg-white z-50 shadow-md">
               <SearchScreen onClose={() => setIsSearchOpen(false)} />
             </div>
           )}
 
-          {/* Main Content */}
-          <div className={`flex-grow p-4 ${isSearchOpen ? 'ml-96' : 'ml-64'}`}>
+          {/* Main Content Area */}
+          <div
+            className={`flex-grow p-4 relative ${
+              isSearchOpen ? 'ml-[160px]' : 'ml-64'
+            }`}
+          >
             <Toaster position="top-right" reverseOrder={false} />
             <Routes>
               <Route path="/" element={<Home />} />
