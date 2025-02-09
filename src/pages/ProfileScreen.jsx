@@ -1,3 +1,4 @@
+// src/pages/ProfileScreen.js
 import {
   Box,
   Avatar,
@@ -19,27 +20,34 @@ function ProfileScreen() {
   const { state } = useLocation();
   const [selectedTab, setSelectedTab] = useState("post");
 
+  // Profile data
   const [profileData, setProfileData] = useState({
     name: "John Doe",
     bio: localStorage.getItem("profileBio") || "",
     profileImage: localStorage.getItem("profileImage") || "",
   });
 
-  // Load uploaded images and reels from localStorage
+  // Social data
+  const [followers, setFollowers] = useState(
+    JSON.parse(localStorage.getItem("followers")) || []
+  );
+  const [following, setFollowing] = useState(
+    JSON.parse(localStorage.getItem("following")) || []
+  );
+
+  // Posts data
   const [uploadedImages, setUploadedImages] = useState(
     JSON.parse(localStorage.getItem("uploadedImages")) || []
   );
   const [uploadedReels, setUploadedReels] = useState(
     JSON.parse(localStorage.getItem("uploadedReels")) || []
   );
-
   const [highlights, setHighlights] = useState([]);
 
+  // When a new post is created on another page, update our posts list
   useEffect(() => {
     if (state?.newPost) {
       const { type, url } = state.newPost;
-
-      // Update the respective array based on the type
       if (type === "image" && !uploadedImages.includes(url)) {
         const newImages = [...uploadedImages, url];
         setUploadedImages(newImages);
@@ -49,8 +57,6 @@ function ProfileScreen() {
         setUploadedReels(newReels);
         localStorage.setItem("uploadedReels", JSON.stringify(newReels));
       }
-
-      // Clear the state to prevent duplicate updates
       navigate(".", { replace: true, state: {} });
     }
   }, [state, navigate, uploadedImages, uploadedReels]);
@@ -69,17 +75,8 @@ function ProfileScreen() {
         return updatedData;
       });
       toast.success("Profile picture updated successfully!");
-      event.target.value = "";
+      event.target.value = ""; // Allow re-uploading same file later
     }
-  };
-
-  const handleBioChange = (event) => {
-    const updatedBio = event.target.value;
-    setProfileData((prevData) => {
-      const updatedData = { ...prevData, bio: updatedBio };
-      localStorage.setItem("profileBio", updatedBio);
-      return updatedData;
-    });
   };
 
   const handleHighlightUpload = (event, index) => {
@@ -96,26 +93,22 @@ function ProfileScreen() {
     setHighlights([...highlights, null]);
   };
 
-  const navigateToEditPage = () => {
-    navigate("/edit-profile", { state: { profileData } });
-  };
-
   return (
     <Box display="flex" flexDirection="column" alignItems="center" p={4}>
       <ToastContainer position="top-right" autoClose={3000} />
 
-      {/* Edit Button */}
+      {/* Profile Header */}
       <Box display="flex" justifyContent="flex-end" width="100%">
         <Button
           variant="contained"
           startIcon={<Edit />}
-          onClick={navigateToEditPage}
+          onClick={() => navigate("/edit-profile", { state: { profileData } })}
         >
           Edit Profile
         </Button>
       </Box>
 
-      {/* Profile Section */}
+      {/* Profile Info Section */}
       <Box
         display="flex"
         alignItems="center"
@@ -123,6 +116,7 @@ function ProfileScreen() {
         width="100%"
         mt={4}
       >
+        {/* Avatar and Basic Info */}
         <Box display="flex" alignItems="center" gap={4} position="relative">
           <Avatar
             src={profileData.profileImage || "/default-avatar.png"}
@@ -138,14 +132,8 @@ function ProfileScreen() {
             }}
           >
             <PhotoCamera />
-            <input
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={handleImageChange}
-            />
+            <input type="file" accept="image/*" hidden onChange={handleImageChange} />
           </IconButton>
-
           <Box>
             <Typography variant="h4">{profileData.name}</Typography>
             <Typography
@@ -159,17 +147,30 @@ function ProfileScreen() {
           </Box>
         </Box>
 
+        {/* Stats Section */}
         <Box display="flex" justifyContent="space-around" width="50%">
           <Box textAlign="center">
             <Typography variant="h6">{uploadedImages.length}</Typography>
             <Typography variant="body2">Posts</Typography>
           </Box>
-          <Box textAlign="center">
-            <Typography variant="h6">50</Typography>
+          <Box
+            textAlign="center"
+            sx={{ cursor: "pointer" }}
+            onClick={() =>
+              navigate("/follow", { state: { tab: "followers" } })
+            }
+          >
+            <Typography variant="h6">{followers.length}</Typography>
             <Typography variant="body2">Followers</Typography>
           </Box>
-          <Box textAlign="center">
-            <Typography variant="h6">30</Typography>
+          <Box
+            textAlign="center"
+            sx={{ cursor: "pointer" }}
+            onClick={() =>
+              navigate("/follow", { state: { tab: "following" } })
+            }
+          >
+            <Typography variant="h6">{following.length}</Typography>
             <Typography variant="body2">Following</Typography>
           </Box>
         </Box>

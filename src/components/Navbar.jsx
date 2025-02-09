@@ -39,10 +39,10 @@ export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
             <FaHome className="mr-4 text-3xl" />
             {!isSearchOpen && 'Home'}
           </Link>
-          <Link to="/follow" className="flex items-center text-2xl hover:text-blue-500">
+          {/* <Link to="/follow" className="flex items-center text-2xl hover:text-blue-500">
             <FaUserFriends className="mr-4 text-3xl" />
             {!isSearchOpen && 'Follow'}
-          </Link>
+          </Link> */}
           <Link to="/chat" className="flex items-center text-2xl hover:text-blue-500">
             <FaComments className="mr-4 text-3xl" />
             {!isSearchOpen && 'Chat'}

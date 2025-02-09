@@ -48,7 +48,7 @@ export default function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path="/login" element={<Login />} />
               <Route path="/follow" element={<Follow />} />
-              <Route path="/chat/:userId" element={<Chat />} />
+              <Route path="/chat" element={<Chat />} />
               <Route path="/profile" element={<ProfileScreen />} />
               <Route path="/edit-profile" element={<EditProfileScreen />} />
               <Route path="/create" element={<CreateScreen />} />
