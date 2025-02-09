@@ -5,6 +5,8 @@ import {
   Typography,
   Grid,
   Button,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import { PhotoCamera, VideoLibrary, Add, Edit } from "@mui/icons-material";
 import { ToastContainer, toast } from "react-toastify";
@@ -15,6 +17,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 function ProfileScreen() {
   const navigate = useNavigate();
   const { state } = useLocation();
+  const [selectedTab, setSelectedTab] = useState("post");
 
   const [profileData, setProfileData] = useState({
     name: "John Doe",
@@ -36,6 +39,10 @@ function ProfileScreen() {
     }
   }, [state]);
 
+  const handleTabChange = (event, newValue) => {
+    setSelectedTab(newValue);
+  };
+
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -46,8 +53,6 @@ function ProfileScreen() {
         return updatedData;
       });
       toast.success("Profile picture updated successfully!");
-
-      // Clean up object URL to avoid memory leaks
       event.target.value = "";
     }
   };
@@ -150,18 +155,6 @@ function ProfileScreen() {
               {profileData.bio ||
                 "This is your bio. Write something about yourself!"}
             </Typography>
-            {/* <textarea
-              value={profileData.bio}
-              onChange={handleBioChange}
-              placeholder="Update your bio..."
-              style={{
-                width: '100%',
-                padding: '10px',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                marginTop: '10px',
-              }}
-            /> */}
           </Box>
         </Box>
 
@@ -243,83 +236,78 @@ function ProfileScreen() {
         </Grid>
       </Box>
 
-      {/* Upload Section */}
-      <Box mt={4} textAlign="center">
-        <Typography variant="h6">Upload Section</Typography>
-        <Box display="flex" justifyContent="center" gap="20px" mt={2}>
+      {/* Posts/Reels Section */}
+      <Box mt={4} width="100%">
+        <Tabs
+          value={selectedTab}
+          onChange={handleTabChange}
+          centered
+          sx={{ borderBottom: 1, borderColor: "divider" }}
+        >
+          <Tab label="Posts" value="post" />
+          <Tab label="Reels" value="reel" />
+        </Tabs>
+
+        {/* Upload Button */}
+        <Box textAlign="center" mt={2}>
           <Button
             variant="contained"
             component="label"
-            startIcon={<PhotoCamera />}
+            startIcon={
+              selectedTab === "post" ? <PhotoCamera /> : <VideoLibrary />
+            }
           >
-            Upload Image
+            Upload {selectedTab === "post" ? "Image" : "Reel"}
             <input
               type="file"
-              accept="image/*"
+              accept={selectedTab === "post" ? "image/*" : "video/*"}
               multiple
               hidden
-              onChange={(event) => handleSeparateUpload(event, "image")}
-            />
-          </Button>
-          <Button
-            variant="contained"
-            component="label"
-            startIcon={<VideoLibrary />}
-          >
-            Upload Reel
-            <input
-              type="file"
-              accept="video/*"
-              multiple
-              hidden
-              onChange={(event) => handleSeparateUpload(event, "reel")}
+              onChange={(e) =>
+                handleSeparateUpload(e, selectedTab === "post" ? "image" : "reel")
+              }
             />
           </Button>
         </Box>
-      </Box>
 
-      <Box mt={4} width="100%">
-        {uploadedImages.length > 0 && (
-          <Box mt={2}>
-            <Typography variant="h6">Uploaded Images:</Typography>
-            <Grid container spacing={2}>
-              {uploadedImages.map((image, index) => (
-                <Grid item xs={6} sm={4} key={index}>
+        {/* Content Grid */}
+        <Grid container spacing={2} mt={2}>
+          {selectedTab === "post"
+            ? uploadedImages.map((image, index) => (
+                <Grid item xs={6} sm={4} md={3} key={index}>
                   <img
                     src={image}
-                    alt={`Uploaded Image ${index + 1}`}
+                    alt={`Post ${index + 1}`}
                     style={{
                       width: "100%",
-                      maxHeight: "200px",
+                      height: "300px",
                       objectFit: "cover",
                       borderRadius: "8px",
                     }}
                   />
                 </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
-        {uploadedReels.length > 0 && (
-          <Box mt={2}>
-            <Typography variant="h6">Uploaded Reels:</Typography>
-            <Grid container spacing={2}>
-              {uploadedReels.map((reel, index) => (
-                <Grid item xs={6} sm={4} key={index}>
+              ))
+            : uploadedReels.map((reel, index) => (
+                <Grid item xs={6} sm={4} md={3} key={index}>
                   <video
                     src={reel}
                     controls
                     style={{
                       width: "100%",
-                      maxHeight: "200px",
+                      height: "300px",
                       objectFit: "cover",
                       borderRadius: "8px",
                     }}
                   />
                 </Grid>
               ))}
-            </Grid>
-          </Box>
+        </Grid>
+
+        {((selectedTab === "post" && uploadedImages.length === 0) ||
+          (selectedTab === "reel" && uploadedReels.length === 0)) && (
+          <Typography variant="h6" textAlign="center" mt={4}>
+            No {selectedTab === "post" ? "posts" : "reels"} yet
+          </Typography>
         )}
       </Box>
     </Box>

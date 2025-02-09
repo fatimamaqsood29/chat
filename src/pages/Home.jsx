@@ -24,21 +24,28 @@ const initialPosts = [
   },
 ];
 
-const suggestions = [
+const suggestionsData = [
   { id: 1, username: "random_user" },
   { id: 2, username: "cool_guy_007" },
+  { id: 3, username: "techie_gal" },
+  { id: 4, username: "nature_lover" },
 ];
 
 const Home = () => {
   const [posts, setPosts] = useState(initialPosts);
   const [showCommentInput, setShowCommentInput] = useState({});
+  const [suggestions, setSuggestions] = useState(suggestionsData);
   const { darkMode } = useThemeContext();
 
   const toggleLike = (postId) => {
     setPosts((prevPosts) =>
       prevPosts.map((post) =>
         post.id === postId
-          ? { ...post, likes: post.likes + (post.liked ? -1 : 1), liked: !post.liked }
+          ? {
+              ...post,
+              likes: post.likes + (post.liked ? -1 : 1),
+              liked: !post.liked,
+            }
           : post
       )
     );
@@ -60,14 +67,30 @@ const Home = () => {
     );
   };
 
+  const handleFollowToggle = (userId) => {
+    setSuggestions((prevSuggestions) =>
+      prevSuggestions.map((user) =>
+        user.id === userId ? { ...user, following: !user.following } : user
+      )
+    );
+  };
+
   return (
-    <div className={`${darkMode ? "bg-black text-white" : "bg-gray-100 text-black"} min-h-screen`}>
+    <div
+      className={`${
+        darkMode ? "bg-black text-white" : "bg-gray-100 text-black"
+      } min-h-screen`}
+    >
       <div className="flex justify-center mt-4">
         <div className="w-full max-w-4xl flex gap-4">
           {/* Left Section (Stories + Feed) */}
           <div className="w-2/3">
             {/* Stories */}
-            <div className={`p-4 rounded-md shadow-md flex space-x-4 overflow-x-auto ${darkMode ? "bg-gray-800" : "bg-white"}`}>
+            <div
+              className={`p-4 rounded-md shadow-md flex space-x-4 overflow-x-auto ${
+                darkMode ? "bg-gray-800" : "bg-white"
+              }`}
+            >
               {stories.map((story) => (
                 <div key={story.id} className="flex flex-col items-center">
                   <img
@@ -83,7 +106,12 @@ const Home = () => {
             {/* Feed */}
             <div className="mt-4 space-y-4">
               {posts.map((post) => (
-                <div key={post.id} className={`p-4 rounded-md shadow-md ${darkMode ? "bg-gray-800" : "bg-white"}`}>
+                <div
+                  key={post.id}
+                  className={`p-4 rounded-md shadow-md ${
+                    darkMode ? "bg-gray-800" : "bg-white"
+                  }`}
+                >
                   <div className="flex items-center space-x-2">
                     <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
                     <p className="font-bold">{post.username}</p>
@@ -93,15 +121,31 @@ const Home = () => {
                     alt="Post"
                     className="w-full mt-2 rounded-md"
                   />
-                  <div className="flex items-center ">
-                    <button onClick={() => toggleLike(post.id)} className="text-red-500 text-lg">
-                      {post.liked ? "❤️" : "🤍"}
-                    </button>
-                    
-                    <p className="text-sm">{post.likes} Likes</p>
-                    <button onClick={() => toggleCommentInput(post.id)} className="text-blue-500 text-lg">
-                      💬
-                    </button>
+
+                  <div className="flex items-center mt-2">
+                    {/* Like Section */}
+                    <div className="flex flex-col items-center mr-2">
+                      <button
+                        onClick={() => toggleLike(post.id)}
+                        className="text-red-500 text-lg"
+                      >
+                        {post.liked ? "❤️" : "🤍"}
+                      </button>
+                      <p className="text-sm mt-1">{post.likes} Likes</p>
+                    </div>
+
+                    {/* Comment Section */}
+                    <div className="flex flex-col items-center">
+                      <button
+                        onClick={() => toggleCommentInput(post.id)}
+                        className="text-blue-500 text-lg"
+                      >
+                        💬
+                      </button>
+                      <p className="text-sm mt-1">
+                        {post.comments.length} Comments
+                      </p>
+                    </div>
                   </div>
 
                   {/* Comment Section */}
@@ -141,13 +185,36 @@ const Home = () => {
 
           {/* Right Section (Sidebar) */}
           <div className="w-1/3">
-            <div className={`p-4 rounded-md shadow-md ${darkMode ? "bg-gray-800" : "bg-white"}`}>
+            <div
+              className={`p-4 rounded-md shadow-md ${
+                darkMode ? "bg-gray-800" : "bg-white"
+              }`}
+            >
               <h2 className="text-lg font-bold mb-2">Suggestions</h2>
-              <div className="flex flex-col space-y-2">
+              <div className="space-y-4">
                 {suggestions.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between">
-                    <p className="text-sm">{user.username}</p>
-                    <button className="text-blue-500 text-xs">Follow</button>
+                  <div
+                    key={user.id}
+                    className={`flex items-center justify-between p-2 rounded-md ${
+                      darkMode ? "bg-gray-700" : "bg-gray-200"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                        <span className="font-bold">{user.id}</span>
+                      </div>
+                      <p className="text-sm">{user.username}</p>
+                    </div>
+                    <button
+                      onClick={() => handleFollowToggle(user.id)}
+                      className={`px-4 py-1 rounded-md text-xs ${
+                        user.following
+                          ? "bg-green-500 text-white"
+                          : "bg-blue-500 text-white"
+                      }`}
+                    >
+                      {user.following ? "Following" : "Follow"}
+                    </button>
                   </div>
                 ))}
               </div>
