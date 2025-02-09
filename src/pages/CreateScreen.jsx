@@ -1,160 +1,165 @@
-import React, { useState } from "react";
-import { Box, Typography, Button, IconButton } from "@mui/material";
-import { PhotoCamera, VideoLibrary } from "@mui/icons-material";
-import { toast } from "react-toastify";
+import {
+  Box,
+  Button,
+  Typography,
+  IconButton,
+  Grid,
+  TextField,
+  Card,
+} from "@mui/material";
+import { AddPhotoAlternate, Movie, CloudUpload } from "@mui/icons-material";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useThemeContext } from "../ThemeContext";
 
-function CreateScreen({ onClose }) {
-  const [file, setFile] = useState(null);
-  const [fileType, setFileType] = useState(null); // 'image' or 'video'
+function CreateScreen() {
+  const navigate = useNavigate();
+  const { darkMode } = useThemeContext();
 
-  const handleFileUpload = (event, type) => {
-    const selectedFile = event.target.files[0];
-    if (selectedFile) {
-      if (type === "image" && !selectedFile.type.startsWith("image/")) {
-        toast.error("Please upload a valid image file.");
-        return;
-      }
-      if (type === "video" && !selectedFile.type.startsWith("video/")) {
-        toast.error("Please upload a valid video file.");
-        return;
-      }
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [mediaType, setMediaType] = useState(null); // "image" or "video"
+  const [caption, setCaption] = useState("");
 
-      setFile(URL.createObjectURL(selectedFile));
-      setFileType(type);
+  const handleFileChange = (event, type) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(URL.createObjectURL(file));
+      setMediaType(type);
+      toast.success(`${type === "image" ? "Image" : "Video"} selected successfully!`);
     }
   };
 
-  const handleShare = () => {
-    if (file) {
-      toast.success(
-        `Your ${fileType === "image" ? "image" : "video"} has been shared!`
-      );
-      onClose();
-    } else {
-      toast.error("Please upload a file first.");
+  const handleUpload = () => {
+    if (!selectedFile) {
+      toast.error("Please select a file before uploading.");
+      return;
     }
+
+    navigate("/profile", {
+      state: {
+        newPost: {
+          type: mediaType,
+          url: selectedFile,
+          caption: caption,
+        },
+      },
+    });
+
+    toast.success("Post uploaded successfully!");
   };
 
   return (
     <Box
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      alignItems="center"
+      p={4}
       sx={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 1000,
+        minHeight: "100vh",
+        backgroundColor: darkMode ? "#121212" : "#f5f5f5",
       }}
     >
-      <Box
+      <ToastContainer position="top-right" autoClose={3000} />
+
+      <Card
         sx={{
-          backgroundColor: "white",
-          borderRadius: "16px",
-          width: "500px",
-          padding: "24px",
+          maxWidth: 500,
+          width: "100%",
+          padding: 4,
+          boxShadow: 3,
+          backgroundColor: darkMode ? "#1e1e1e" : "#ffffff",
+          borderRadius: 4,
           textAlign: "center",
         }}
       >
-        <Typography variant="h5" sx={{ mb: 2 }}>
+        <Typography variant="h5" mb={3} color={darkMode ? "#ffffff" : "#000000"}>
           Create New Post
         </Typography>
 
-        {/* File Upload Area */}
-        <Box
-          sx={{
-            border: "2px dashed #ccc",
-            borderRadius: "8px",
-            padding: "20px",
-            mb: 2,
-            minHeight: "200px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {file ? (
-            fileType === "image" ? (
+        {/* Media Selection */}
+        <Grid container spacing={2} justifyContent="center">
+          <Grid item>
+            <IconButton component="label">
+              <AddPhotoAlternate
+                sx={{ fontSize: 50, color: darkMode ? "#90caf9" : "#1976d2" }}
+              />
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(event) => handleFileChange(event, "image")}
+              />
+            </IconButton>
+            <Typography textAlign="center" mt={1}>
+              Add Image
+            </Typography>
+          </Grid>
+          <Grid item>
+            <IconButton component="label">
+              <Movie sx={{ fontSize: 50, color: darkMode ? "#90caf9" : "#1976d2" }} />
+              <input
+                type="file"
+                accept="video/*"
+                hidden
+                onChange={(event) => handleFileChange(event, "video")}
+              />
+            </IconButton>
+            <Typography textAlign="center" mt={1}>
+              Add Video
+            </Typography>
+          </Grid>
+        </Grid>
+
+        {/* Preview Section */}
+        {selectedFile && (
+          <Box mt={4}>
+            {mediaType === "image" ? (
               <img
-                src={file}
-                alt="Uploaded"
-                style={{ maxWidth: "100%", maxHeight: "300px" }}
+                src={selectedFile}
+                alt="Selected"
+                style={{ width: "100%", maxHeight: 300, borderRadius: 8 }}
               />
             ) : (
               <video
-                src={file}
+                src={selectedFile}
                 controls
-                style={{ maxWidth: "100%", maxHeight: "300px" }}
+                style={{ width: "100%", maxHeight: 300, borderRadius: 8 }}
               />
-            )
-          ) : (
-            <>
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                Drag photos or videos here
-              </Typography>
-              <Box>
-                <IconButton component="label">
-                  <PhotoCamera sx={{ fontSize: "40px" }} />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={(e) => handleFileUpload(e, "image")}
-                  />
-                </IconButton>
-                <IconButton component="label">
-                  <VideoLibrary sx={{ fontSize: "40px" }} />
-                  <input
-                    type="file"
-                    accept="video/*"
-                    hidden
-                    onChange={(e) => handleFileUpload(e, "video")}
-                  />
-                </IconButton>
-              </Box>
-            </>
-          )}
-        </Box>
+            )}
+          </Box>
+        )}
 
-        {/* Select from Computer Button */}
-        <Button
-          variant="contained"
-          component="label"
-          sx={{ mb: 2 }}
-        >
-          Select from Computer
-          <input
-            type="file"
-            accept={fileType === "image" ? "image/*" : "video/*"}
-            hidden
-            onChange={(e) => handleFileUpload(e, fileType || "image")}
-          />
-        </Button>
-
-        {/* Share Button */}
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          onClick={handleShare}
-        >
-          Share
-        </Button>
-
-        {/* Close Button */}
-        <Button
+        {/* Caption Input */}
+        <TextField
+          label="Caption"
           variant="outlined"
           fullWidth
-          sx={{ mt: 2 }}
-          onClick={onClose}
+          multiline
+          rows={2}
+          value={caption}
+          onChange={(event) => setCaption(event.target.value)}
+          sx={{
+            mt: 3,
+            backgroundColor: darkMode ? "#303030" : "#ffffff",
+            color: darkMode ? "#ffffff" : "#000000",
+          }}
+          InputLabelProps={{ style: { color: darkMode ? "#ffffff" : "#000000" } }}
+          InputProps={{ style: { color: darkMode ? "#ffffff" : "#000000" } }}
+        />
+
+        {/* Upload Button */}
+        <Button
+          variant="contained"
+          startIcon={<CloudUpload />}
+          onClick={handleUpload}
+          sx={{ mt: 3, backgroundColor: darkMode ? "#90caf9" : "#1976d2" }}
         >
-          Close
+          Upload
         </Button>
-      </Box>
+      </Card>
     </Box>
   );
 }

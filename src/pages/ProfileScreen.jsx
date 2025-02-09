@@ -8,7 +8,7 @@ import {
   Tabs,
   Tab,
 } from "@mui/material";
-import { PhotoCamera, VideoLibrary, Add, Edit } from "@mui/icons-material";
+import { PhotoCamera, Add, Edit } from "@mui/icons-material";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useState, useEffect } from "react";
@@ -25,19 +25,35 @@ function ProfileScreen() {
     profileImage: localStorage.getItem("profileImage") || "",
   });
 
+  // Load uploaded images and reels from localStorage
+  const [uploadedImages, setUploadedImages] = useState(
+    JSON.parse(localStorage.getItem("uploadedImages")) || []
+  );
+  const [uploadedReels, setUploadedReels] = useState(
+    JSON.parse(localStorage.getItem("uploadedReels")) || []
+  );
+
   const [highlights, setHighlights] = useState([]);
-  const [uploadedImages, setUploadedImages] = useState([]);
-  const [uploadedReels, setUploadedReels] = useState([]);
 
   useEffect(() => {
-    if (state) {
-      setProfileData((prevData) => ({
-        name: state.name || prevData.name,
-        bio: state.bio || prevData.bio,
-        profileImage: state.profileImage || prevData.profileImage,
-      }));
+    if (state?.newPost) {
+      const { type, url } = state.newPost;
+
+      // Update the respective array based on the type
+      if (type === "image" && !uploadedImages.includes(url)) {
+        const newImages = [...uploadedImages, url];
+        setUploadedImages(newImages);
+        localStorage.setItem("uploadedImages", JSON.stringify(newImages));
+      } else if (type === "video" && !uploadedReels.includes(url)) {
+        const newReels = [...uploadedReels, url];
+        setUploadedReels(newReels);
+        localStorage.setItem("uploadedReels", JSON.stringify(newReels));
+      }
+
+      // Clear the state to prevent duplicate updates
+      navigate(".", { replace: true, state: {} });
     }
-  }, [state]);
+  }, [state, navigate, uploadedImages, uploadedReels]);
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
@@ -73,21 +89,6 @@ function ProfileScreen() {
       newHighlights[index] = URL.createObjectURL(file);
       setHighlights(newHighlights);
       toast.success("Highlight uploaded successfully!");
-    }
-  };
-
-  const handleSeparateUpload = (event, type) => {
-    const files = Array.from(event.target.files);
-    if (files.length > 0) {
-      if (type === "image") {
-        const newImages = files.map((file) => URL.createObjectURL(file));
-        setUploadedImages((prev) => [...prev, ...newImages]);
-        toast.success(`${files.length} image(s) uploaded successfully!`);
-      } else if (type === "reel") {
-        const newReels = files.map((file) => URL.createObjectURL(file));
-        setUploadedReels((prev) => [...prev, ...newReels]);
-        toast.success(`${files.length} reel(s) uploaded successfully!`);
-      }
     }
   };
 
@@ -248,28 +249,6 @@ function ProfileScreen() {
           <Tab label="Reels" value="reel" />
         </Tabs>
 
-        {/* Upload Button */}
-        <Box textAlign="center" mt={2}>
-          <Button
-            variant="contained"
-            component="label"
-            startIcon={
-              selectedTab === "post" ? <PhotoCamera /> : <VideoLibrary />
-            }
-          >
-            Upload {selectedTab === "post" ? "Image" : "Reel"}
-            <input
-              type="file"
-              accept={selectedTab === "post" ? "image/*" : "video/*"}
-              multiple
-              hidden
-              onChange={(e) =>
-                handleSeparateUpload(e, selectedTab === "post" ? "image" : "reel")
-              }
-            />
-          </Button>
-        </Box>
-
         {/* Content Grid */}
         <Grid container spacing={2} mt={2}>
           {selectedTab === "post"
@@ -305,8 +284,8 @@ function ProfileScreen() {
 
         {((selectedTab === "post" && uploadedImages.length === 0) ||
           (selectedTab === "reel" && uploadedReels.length === 0)) && (
-          <Typography variant="h6" textAlign="center" mt={4}>
-            No {selectedTab === "post" ? "posts" : "reels"} yet
+          <Typography variant="body1" textAlign="center" mt={2}>
+            No {selectedTab === "post" ? "posts" : "reels"} yet.
           </Typography>
         )}
       </Box>
