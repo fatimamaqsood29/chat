@@ -1,3 +1,4 @@
+// App.js
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -11,6 +12,7 @@ import Home from './pages/Home';
 import { ThemeProviderWrapper } from './ThemeContext';
 import EditProfileScreen from './pages/EditProfileScreen';
 import SearchScreen from './pages/SearchScreen';
+import CreateScreen from './pages/CreateScreen'; // Import the CreatePost component
 
 export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -27,7 +29,7 @@ export default function App() {
             />
           </div>
 
-          {/* Search Overlay on Left Side (adjacent to the navbar) */}
+          {/* Search Overlay */}
           {isSearchOpen && (
             <div className="fixed top-0 left-19 w-96 h-screen border-r p-4 bg-white z-50 shadow-md">
               <SearchScreen onClose={() => setIsSearchOpen(false)} />
@@ -49,6 +51,7 @@ export default function App() {
               <Route path="/chat/:userId" element={<Chat />} />
               <Route path="/profile" element={<ProfileScreen />} />
               <Route path="/edit-profile" element={<EditProfileScreen />} />
+              <Route path="/create" element={<CreateScreen />} />
             </Routes>
           </div>
         </div>

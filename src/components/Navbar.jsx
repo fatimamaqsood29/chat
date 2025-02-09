@@ -12,8 +12,11 @@ import {
   FaCog,
   FaBookmark,
   FaSignOutAlt,
+  FaPlus,
   FaExchangeAlt,
 } from 'react-icons/fa';
+
+
 import { useThemeContext } from '../ThemeContext';
 
 export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
@@ -44,6 +47,11 @@ export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
             <FaComments className="mr-4 text-3xl" />
             {!isSearchOpen && 'Chat'}
           </Link>
+          <Link to="/create" className="flex items-center text-2xl hover:text-blue-500">
+  <FaPlus className="mr-4 text-3xl" />
+  {!isSearchOpen && 'Create'}
+</Link>
+       
           <Link to="/profile" className="flex items-center text-2xl hover:text-blue-500">
             <FaUser className="mr-4 text-3xl" />
             {!isSearchOpen && 'Profile'}
