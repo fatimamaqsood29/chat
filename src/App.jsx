@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { Provider } from 'react-redux';
 import { Toaster } from 'react-hot-toast';
+import store from './store/store';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import Follow from './pages/Follow';
@@ -12,6 +14,7 @@ import { ThemeProviderWrapper } from './ThemeContext';
 import EditProfileScreen from './pages/EditProfileScreen';
 import SearchScreen from './pages/SearchScreen';
 import CreateScreen from './pages/CreateScreen';
+import ExplorerScreen from './pages/ExplorerScreen';
 
 function AppContent() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -52,6 +55,7 @@ function AppContent() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/home" element={<Home />} />
           <Route path="/follow" element={<Follow />} />
+          <Route path="/explorer" element={<ExplorerScreen />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/profile" element={<ProfileScreen />} />
           <Route path="/edit-profile" element={<EditProfileScreen />} />
@@ -65,10 +69,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ThemeProviderWrapper>
-      <Router>
-        <AppContent />
-      </Router>
-    </ThemeProviderWrapper>
+    <Provider store={store}>
+      <ThemeProviderWrapper>
+        <Router>
+          <AppContent />
+        </Router>
+      </ThemeProviderWrapper>
+    </Provider>
   );
 }
