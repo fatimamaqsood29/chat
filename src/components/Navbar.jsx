@@ -35,7 +35,7 @@ export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
         </h1>
 
         <div className="flex flex-col items-start space-y-10">
-          <Link to="/" className="flex items-center text-2xl hover:text-blue-500">
+          <Link to="/home" className="flex items-center text-2xl hover:text-blue-500">
             <FaHome className="mr-4 text-3xl" />
             {!isSearchOpen && 'Home'}
           </Link>

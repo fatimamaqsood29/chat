@@ -38,7 +38,7 @@ export default function Login() {
 
       if (response.ok) {
         toast.success('Logged in successfully!');
-        navigate('/follow'); // Navigate to your desired page after login
+        navigate('/home'); // Navigate to your desired page after login
       } else {
         toast.error(result.message || 'Login failed. Please check your credentials.');
       }

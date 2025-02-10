@@ -16,9 +16,9 @@ function EditProfileScreen() {
   const navigate = useNavigate();
   const { state } = useLocation();
 
-  const [previewImage, setPreviewImage] = useState(state?.previewImage || "");
-  const [bio, setBio] = useState(state?.bio || "");
-  const [name, setName] = useState(state?.name || "");
+  const [previewImage, setPreviewImage] = useState(state?.profileData?.profileImage || "");
+  const [bio, setBio] = useState(state?.profileData?.bio || "");
+  const [name, setName] = useState(state?.profileData?.name || "");
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -34,8 +34,12 @@ function EditProfileScreen() {
       return;
     }
 
+    localStorage.setItem("profileName", name);
+    localStorage.setItem("profileBio", bio);
+    localStorage.setItem("profileImage", previewImage);
+
     toast.success("Profile updated successfully!");
-    navigate("/profile", { state: { previewImage, bio, name } });
+    navigate("/profile");
   };
 
   return (

@@ -14,8 +14,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useSelector } from 'react-redux';
-
+import { useSelector } from "react-redux";
 
 function ProfileScreen() {
   const navigate = useNavigate();
@@ -30,15 +29,8 @@ function ProfileScreen() {
   });
 
   // Social data
-  // const [followers, setFollowers] = useState(
-  //   JSON.parse(localStorage.getItem("followers")) || []
-  // );
-  // const [following, setFollowing] = useState(
-  //   JSON.parse(localStorage.getItem("following")) || []
-  // );
   const followers = useSelector((state) => state.follow.followers);
   const following = useSelector((state) => state.follow.following);
-
 
   // Posts data
   const [uploadedImages, setUploadedImages] = useState(
@@ -48,8 +40,15 @@ function ProfileScreen() {
     JSON.parse(localStorage.getItem("uploadedReels")) || []
   );
   const [highlights, setHighlights] = useState([]);
+  const [totalPosts, setTotalPosts] = useState(
+    (uploadedImages.length || 0) + (uploadedReels.length || 0)
+  );
 
-  // When a new post is created on another page, update our posts list
+  // Update posts count and sync with localStorage when uploading
+  useEffect(() => {
+    setTotalPosts(uploadedImages.length + uploadedReels.length);
+  }, [uploadedImages, uploadedReels]);
+
   useEffect(() => {
     if (state?.newPost) {
       const { type, url } = state.newPost;
@@ -65,6 +64,23 @@ function ProfileScreen() {
       navigate(".", { replace: true, state: {} });
     }
   }, [state, navigate, uploadedImages, uploadedReels]);
+
+  // Listen for changes in localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setProfileData({
+        name: localStorage.getItem("profileName") || "John Doe",
+        bio: localStorage.getItem("profileBio") || "",
+        profileImage: localStorage.getItem("profileImage") || "",
+      });
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
@@ -155,7 +171,7 @@ function ProfileScreen() {
         {/* Stats Section */}
         <Box display="flex" justifyContent="space-around" width="50%">
           <Box textAlign="center">
-            <Typography variant="h6">{uploadedImages.length}</Typography>
+            <Typography variant="h6">{totalPosts}</Typography>
             <Typography variant="body2">Posts</Typography>
           </Box>
           <Box
