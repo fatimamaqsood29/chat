@@ -14,6 +14,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useSelector } from 'react-redux';
+
 
 function ProfileScreen() {
   const navigate = useNavigate();
@@ -28,12 +30,15 @@ function ProfileScreen() {
   });
 
   // Social data
-  const [followers, setFollowers] = useState(
-    JSON.parse(localStorage.getItem("followers")) || []
-  );
-  const [following, setFollowing] = useState(
-    JSON.parse(localStorage.getItem("following")) || []
-  );
+  // const [followers, setFollowers] = useState(
+  //   JSON.parse(localStorage.getItem("followers")) || []
+  // );
+  // const [following, setFollowing] = useState(
+  //   JSON.parse(localStorage.getItem("following")) || []
+  // );
+  const followers = useSelector((state) => state.follow.followers);
+  const following = useSelector((state) => state.follow.following);
+
 
   // Posts data
   const [uploadedImages, setUploadedImages] = useState(

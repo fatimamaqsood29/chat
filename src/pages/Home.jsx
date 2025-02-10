@@ -1,5 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import { useThemeContext } from "../ThemeContext";
+import { useDispatch, useSelector } from "react-redux";
+// Use the postSlice actions for post-related updates.
+import { toggleLikePost, toggleCommentInput, addCommentToPost } from "../features/postSlice";
+// Use the followSlice actions for following/unfollowing users.
+import { addFollowing, removeFollowing } from "../features/followSlice";
 
 const stories = [
   { id: 1, username: "mishi_262", img: "https://via.placeholder.com/50" },
@@ -7,83 +12,55 @@ const stories = [
   { id: 3, username: "aesthetic_girl", img: "https://via.placeholder.com/50" },
 ];
 
-const initialPosts = [
-  {
-    id: 1,
-    username: "gauravyadav_in",
-    image: "https://via.placeholder.com/500",
-    likes: 4300000,
-    comments: [],
-  },
-  {
-    id: 2,
-    username: "makeup_by_amina06",
-    image: "https://via.placeholder.com/500",
-    likes: 120000,
-    comments: [],
-  },
-];
-
-const suggestionsData = [
-  { id: 1, username: "random_user" },
-  { id: 2, username: "cool_guy_007" },
-  { id: 3, username: "techie_gal" },
-  { id: 4, username: "nature_lover" },
-];
-
 const Home = () => {
-  const [posts, setPosts] = useState(initialPosts);
-  const [showCommentInput, setShowCommentInput] = useState({});
-  const [suggestions, setSuggestions] = useState(suggestionsData);
   const { darkMode } = useThemeContext();
+  const dispatch = useDispatch();
 
-  const toggleLike = (postId) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              likes: post.likes + (post.liked ? -1 : 1),
-              liked: !post.liked,
-            }
-          : post
-      )
-    );
+  // Posts come from your post slice.
+  const posts = useSelector((state) => state.post.posts);
+  // Followed users come from your follow slice.
+  const followingRedux = useSelector((state) => state.follow.following);
+  // Dummy suggestions are stored in the follow slice. (Seed your followSlice.initialState with dummy suggestions.)
+  const suggestionsFromStore = useSelector((state) => state.follow.suggestions || []);
+  // Filter out any suggestions the user is already following.
+  const suggestions = suggestionsFromStore.filter(
+    (user) => !followingRedux.some((follow) => follow.id === user.id)
+  );
+
+  // When clicking the heart button, toggle the like status.
+  const handleLikeToggle = (postId) => {
+    dispatch(toggleLikePost(postId));
   };
 
-  const toggleCommentInput = (postId) => {
-    setShowCommentInput((prev) => ({ ...prev, [postId]: !prev[postId] }));
+  // Toggle the display of the comment input for a post.
+  const handleCommentToggle = (postId) => {
+    dispatch(toggleCommentInput(postId));
   };
 
-  const addComment = (postId, commentText) => {
+  // Dispatch an action to add a comment.
+  const handleAddComment = (postId, commentText) => {
     if (!commentText.trim()) return;
-
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId
-          ? { ...post, comments: [...post.comments, commentText] }
-          : post
-      )
-    );
+    dispatch(addCommentToPost({ postId, commentText }));
   };
 
+  // Toggle follow/unfollow on a suggestion.
   const handleFollowToggle = (userId) => {
-    setSuggestions((prevSuggestions) =>
-      prevSuggestions.map((user) =>
-        user.id === userId ? { ...user, following: !user.following } : user
-      )
-    );
+    // Find the user in suggestions. (Your follow reducer should manage the 'following' flag.)
+    const user = suggestions.find((u) => u.id === userId);
+    if (user?.following) {
+      dispatch(removeFollowing(userId));
+    } else {
+      dispatch(addFollowing({ id: userId, username: user.username }));
+    }
   };
 
   return (
     <div
-      className={`${
-        darkMode ? "bg-black text-white" : "bg-gray-100 text-black"
-      } min-h-screen`}
+      className={`${darkMode ? "bg-black text-white" : "bg-gray-100 text-black"} min-h-screen`}
     >
       <div className="flex justify-center mt-4">
         <div className="w-full max-w-4xl flex gap-4">
-          {/* Left Section (Stories + Feed) */}
+          {/* Left Section: Stories & Feed */}
           <div className="w-2/3">
             {/* Stories */}
             <div
@@ -126,7 +103,7 @@ const Home = () => {
                     {/* Like Section */}
                     <div className="flex flex-col items-center mr-2">
                       <button
-                        onClick={() => toggleLike(post.id)}
+                        onClick={() => handleLikeToggle(post.id)}
                         className="text-red-500 text-lg"
                       >
                         {post.liked ? "❤️" : "🤍"}
@@ -137,7 +114,7 @@ const Home = () => {
                     {/* Comment Section */}
                     <div className="flex flex-col items-center">
                       <button
-                        onClick={() => toggleCommentInput(post.id)}
+                        onClick={() => handleCommentToggle(post.id)}
                         className="text-blue-500 text-lg"
                       >
                         💬
@@ -148,7 +125,7 @@ const Home = () => {
                     </div>
                   </div>
 
-                  {/* Comment Section */}
+                  {/* Display Comments */}
                   <div className="mt-2">
                     {post.comments.map((comment, index) => (
                       <p key={index} className="text-sm text-gray-700">
@@ -158,7 +135,7 @@ const Home = () => {
                   </div>
 
                   {/* Comment Input */}
-                  {showCommentInput[post.id] && (
+                  {post.showCommentInput && (
                     <div className="mt-2 flex">
                       <input
                         type="text"
@@ -168,12 +145,18 @@ const Home = () => {
                         }`}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
-                            addComment(post.id, e.target.value);
+                            handleAddComment(post.id, e.target.value);
                             e.target.value = "";
                           }
                         }}
                       />
-                      <button className="ml-2 bg-blue-500 text-white px-4 py-1 rounded-md">
+                      {/* Optionally, you can add a button to post the comment */}
+                      <button
+                        className="ml-2 bg-blue-500 text-white px-4 py-1 rounded-md"
+                        onClick={() => {
+                          /* You could also implement a click event to post comment here */
+                        }}
+                      >
                         Post
                       </button>
                     </div>
@@ -183,7 +166,7 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Right Section (Sidebar) */}
+          {/* Right Section: Follow Suggestions */}
           <div className="w-1/3">
             <div
               className={`p-4 rounded-md shadow-md ${
@@ -200,9 +183,11 @@ const Home = () => {
                     }`}
                   >
                     <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                        <span className="font-bold">{user.id}</span>
-                      </div>
+                      <img
+                        src={user.img || "https://via.placeholder.com/50"}
+                        alt={user.username}
+                        className="w-10 h-10 rounded-full"
+                      />
                       <p className="text-sm">{user.username}</p>
                     </div>
                     <button
@@ -217,6 +202,9 @@ const Home = () => {
                     </button>
                   </div>
                 ))}
+                {suggestions.length === 0 && (
+                  <p className="text-sm">No suggestions available</p>
+                )}
               </div>
             </div>
           </div>

@@ -1,151 +1,78 @@
-// src/pages/Follow.js
-import React, { useState, useEffect } from "react";
-import {
-  Box,
-  Tabs,
-  Tab,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Avatar,
-  Button,
-  IconButton,
-  Typography,
-} from "@mui/material";
-import { Close } from "@mui/icons-material";
-import { useNavigate, useLocation } from "react-router-dom";
-import { toast } from "react-toastify";
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { addFollower, addFollowing, removeFollower, removeFollowing } from '../features/followSlice';
+import { Box, Button, Typography, Container, List, ListItem, IconButton } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 
-const Follow = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  // Use the passed state to determine the initial tab ("followers" or "following")
-  const initialTab = location.state?.tab || "followers";
-  const [selectedTab, setSelectedTab] = useState(initialTab);
-  const [followers, setFollowers] = useState([]);
-  const [following, setFollowing] = useState([]);
+function Follow() {
+  const dispatch = useDispatch();
+  const followers = useSelector((state) => state.follow.followers);
+  const following = useSelector((state) => state.follow.following);
+  const handleAddFollower = () => {
+    dispatch(addFollower({ 
+      id: Date.now(), 
+      username: `follower_${Date.now()}` 
+    }));
+  };  
 
-  useEffect(() => {
-    // Load existing data from localStorage (or use empty arrays)
-    const storedFollowers = JSON.parse(localStorage.getItem("followers")) || [];
-    const storedFollowing = JSON.parse(localStorage.getItem("following")) || [];
-    setFollowers(storedFollowers);
-    setFollowing(storedFollowing);
-  }, []);
-
-  const handleTabChange = (event, newValue) => {
-    setSelectedTab(newValue);
+  const handleAddFollowing = () => {
+    dispatch(addFollowing({ id: Date.now(), username: `following_${Date.now()}` }));
   };
 
-  const handleUnfollow = (userId) => {
-    const updatedFollowing = following.filter((user) => user.id !== userId);
-    setFollowing(updatedFollowing);
-    localStorage.setItem("following", JSON.stringify(updatedFollowing));
-    toast.success("Unfollowed successfully!");
+  const handleRemoveFollower = (id) => {
+    dispatch(removeFollower(id));
   };
 
-  const handleRemoveFollower = (userId) => {
-    const updatedFollowers = followers.filter((user) => user.id !== userId);
-    setFollowers(updatedFollowers);
-    localStorage.setItem("followers", JSON.stringify(updatedFollowers));
-    toast.success("Follower removed successfully!");
-  };
-
-  // --- Dummy simulation functions ---
-  const simulateAddFollower = () => {
-    const newFollower = {
-      id: Date.now(), // unique id based on current timestamp
-      username: `follower_${Date.now()}`,
-      profileImage: "https://via.placeholder.com/40",
-    };
-    const updatedFollowers = [...followers, newFollower];
-    setFollowers(updatedFollowers);
-    localStorage.setItem("followers", JSON.stringify(updatedFollowers));
-    toast.success("Dummy follower added!");
-  };
-
-  const simulateAddFollowing = () => {
-    const newFollowing = {
-      id: Date.now(), // unique id based on current timestamp
-      username: `following_${Date.now()}`,
-      profileImage: "https://via.placeholder.com/40",
-    };
-    const updatedFollowing = [...following, newFollowing];
-    setFollowing(updatedFollowing);
-    localStorage.setItem("following", JSON.stringify(updatedFollowing));
-    toast.success("Dummy following added!");
-  };
-
-  const handleClose = () => {
-    // Navigate back to the previous page (typically the ProfileScreen)
-    navigate(-1);
+  const handleRemoveFollowing = (id) => {
+    dispatch(removeFollowing(id));
   };
 
   return (
-    <Box width="100%" maxWidth="600px" margin="auto" mt={4} p={2}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5">Followers &amp; Following</Typography>
-        <IconButton onClick={handleClose}>
-          <Close />
-        </IconButton>
+    <Container>
+      <Box sx={{ textAlign: 'center', marginTop: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Follow Management
+        </Typography>
+
+        <Box sx={{ marginTop: 2 }}>
+          <Button onClick={handleAddFollower} variant="contained" sx={{ margin: 1 }}>
+            Add Follower
+          </Button>
+          <Button onClick={handleAddFollowing} variant="contained" sx={{ margin: 1 }}>
+            Add Following
+          </Button>
+        </Box>
+
+        <Box sx={{ marginTop: 4 }}>
+          <Typography variant="h5">Followers:</Typography>
+          <List>
+            {followers.map((follower) => (
+              <ListItem key={follower.id} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>{follower.username}</Typography>
+                <IconButton onClick={() => handleRemoveFollower(follower.id)}>
+                  <DeleteIcon />
+                </IconButton>
+              </ListItem>
+            ))}
+          </List>
+
+          <Typography variant="h5" sx={{ marginTop: 2 }}>
+            Following:
+          </Typography>
+          <List>
+            {following.map((user) => (
+              <ListItem key={user.id} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>{user.username}</Typography>
+                <IconButton onClick={() => handleRemoveFollowing(user.id)}>
+                  <DeleteIcon />
+                </IconButton>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
       </Box>
-      <Tabs
-        value={selectedTab}
-        onChange={handleTabChange}
-        indicatorColor="primary"
-        textColor="primary"
-        centered
-      >
-        <Tab label="Followers" value="followers" />
-        <Tab label="Following" value="following" />
-      </Tabs>
-      <Box mt={2}>
-        <List>
-          {selectedTab === "followers"
-            ? followers.map((user) => (
-                <ListItem key={user.id}>
-                  <ListItemAvatar>
-                    <Avatar src={user.profileImage} />
-                  </ListItemAvatar>
-                  <ListItemText primary={user.username} />
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={() => handleRemoveFollower(user.id)}
-                  >
-                    Remove
-                  </Button>
-                </ListItem>
-              ))
-            : following.map((user) => (
-                <ListItem key={user.id}>
-                  <ListItemAvatar>
-                    <Avatar src={user.profileImage} />
-                  </ListItemAvatar>
-                  <ListItemText primary={user.username} />
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={() => handleUnfollow(user.id)}
-                  >
-                    Unfollow
-                  </Button>
-                </ListItem>
-              ))}
-        </List>
-      </Box>
-      {/* --- Dummy Action Buttons for Simulation --- */}
-      <Box mt={2} display="flex" justifyContent="space-around">
-        <Button variant="contained" onClick={simulateAddFollower}>
-          Simulate Add Follower
-        </Button>
-        <Button variant="contained" onClick={simulateAddFollowing}>
-          Simulate Follow
-        </Button>
-      </Box>
-    </Box>
+    </Container>
   );
-};
+}
 
 export default Follow;

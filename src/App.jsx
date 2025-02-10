@@ -1,4 +1,3 @@
-// App.js
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -22,7 +21,7 @@ export default function App() {
       <Router>
         <div className="min-h-screen flex relative">
           {/* Fixed Navigation Bar */}
-          <div className="w-64 h-screen fixed left-0">
+          <div className="w-64 h-screen fixed left-0 bg-gray-100 dark:bg-gray-900">
             <Navbar
               setIsSearchOpen={setIsSearchOpen}
               isSearchOpen={isSearchOpen}
@@ -31,16 +30,16 @@ export default function App() {
 
           {/* Search Overlay */}
           {isSearchOpen && (
-            <div className="fixed top-0 left-19 w-96 h-screen border-r p-4 bg-white z-50 shadow-md">
+            <div className="fixed top-0 left-20 w-96 h-screen border-r p-4 bg-white z-50 shadow-md dark:bg-gray-800">
               <SearchScreen onClose={() => setIsSearchOpen(false)} />
             </div>
           )}
 
           {/* Main Content Area */}
           <div
-            className={`flex-grow p-4 relative ${
-              isSearchOpen ? 'ml-[160px]' : 'ml-64'
-            }`}
+            className={`flex-grow p-4 ${
+              isSearchOpen ? 'ml-96' : 'ml-64'
+            } transition-all`}
           >
             <Toaster position="top-right" reverseOrder={false} />
             <Routes>
