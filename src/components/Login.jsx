@@ -23,7 +23,7 @@ export default function Login() {
 
   const onSubmit = async (data) => {
     toast.loading('Logging in...');
-
+  
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/login`, {
         method: 'POST',
@@ -31,14 +31,23 @@ export default function Login() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
-            });
-
+      });
+  
       const result = await response.json();
+      console.log('API Response:', result); // Debugging line
+  
       toast.dismiss();
-
+  
       if (response.ok) {
-        toast.success('Logged in successfully!');
-        navigate('/home'); // Navigate to your desired page after login
+        const token = result.access_token;
+  
+        if (token) {
+          localStorage.setItem('accessToken', token); // Store the correct token
+          toast.success('Logged in successfully!');
+          navigate('/home');
+        } else {
+          toast.error('Token missing. Please check the backend response.');
+        }
       } else {
         toast.error(result.message || 'Login failed. Please check your credentials.');
       }
@@ -47,7 +56,7 @@ export default function Login() {
       toast.error('An error occurred. Please try again.');
     }
   };
-
+  
   return (
     <Box
       display="flex"

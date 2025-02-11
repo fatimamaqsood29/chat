@@ -1,9 +1,9 @@
 import React from "react";
 import { useThemeContext } from "../ThemeContext";
 import { useDispatch, useSelector } from "react-redux";
-// Use the postSlice actions for post-related updates.
+// Import the postSlice actions for post-related updates.
 import { toggleLikePost, toggleCommentInput, addCommentToPost } from "../features/postSlice";
-// Use the followSlice actions for following/unfollowing users.
+// Import the followSlice actions for following/unfollowing users.
 import { addFollowing, removeFollowing } from "../features/followSlice";
 
 const stories = [
@@ -20,9 +20,9 @@ const Home = () => {
   const posts = useSelector((state) => state.post.posts);
   // Followed users come from your follow slice.
   const followingRedux = useSelector((state) => state.follow.following);
-  // Dummy suggestions are stored in the follow slice. (Seed your followSlice.initialState with dummy suggestions.)
+  // Dummy suggestions are stored in the follow slice.
   const suggestionsFromStore = useSelector((state) => state.follow.suggestions || []);
-  // Filter out any suggestions the user is already following.
+  // Filter out suggestions the user is already following.
   const suggestions = suggestionsFromStore.filter(
     (user) => !followingRedux.some((follow) => follow.id === user.id)
   );
@@ -45,7 +45,7 @@ const Home = () => {
 
   // Toggle follow/unfollow on a suggestion.
   const handleFollowToggle = (userId) => {
-    // Find the user in suggestions. (Your follow reducer should manage the 'following' flag.)
+    // Find the user in suggestions.
     const user = suggestions.find((u) => u.id === userId);
     if (user?.following) {
       dispatch(removeFollowing(userId));
@@ -55,18 +55,15 @@ const Home = () => {
   };
 
   return (
-    <div
-      className={`${darkMode ? "bg-black text-white" : "bg-gray-100 text-black"} min-h-screen`}
-    >
+    // Set the overall background to white (light mode) or black (dark mode)
+    <div className={`${darkMode ? "bg-black text-white" : "bg-white text-black"} min-h-screen`}>
       <div className="flex justify-center mt-4">
         <div className="w-full max-w-4xl flex gap-4">
           {/* Left Section: Stories & Feed */}
           <div className="w-2/3">
             {/* Stories */}
             <div
-              className={`p-4 rounded-md shadow-md flex space-x-4 overflow-x-auto ${
-                darkMode ? "bg-gray-800" : "bg-white"
-              }`}
+              className={`p-4 rounded-md shadow-md flex space-x-4 overflow-x-auto ${darkMode ? "bg-black" : "bg-white"}`}
             >
               {stories.map((story) => (
                 <div key={story.id} className="flex flex-col items-center">
@@ -85,9 +82,7 @@ const Home = () => {
               {posts.map((post) => (
                 <div
                   key={post.id}
-                  className={`p-4 rounded-md shadow-md ${
-                    darkMode ? "bg-gray-800" : "bg-white"
-                  }`}
+                  className={`p-4 rounded-md shadow-md ${darkMode ? "bg-black" : "bg-white"}`}
                 >
                   <div className="flex items-center space-x-2">
                     <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
@@ -141,7 +136,7 @@ const Home = () => {
                         type="text"
                         placeholder="Add a comment..."
                         className={`w-full border rounded-md p-2 text-sm ${
-                          darkMode ? "bg-gray-700 text-white" : "bg-white"
+                          darkMode ? "bg-black text-white" : "bg-white text-black"
                         }`}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
@@ -150,11 +145,10 @@ const Home = () => {
                           }
                         }}
                       />
-                      {/* Optionally, you can add a button to post the comment */}
                       <button
-                        className="ml-2 bg-blue-500 text-white px-4 py-1 rounded-md"
+                        className="ml-2 bg-blue-500 text-white px-4 py-1 rounded-md text-sm"
                         onClick={() => {
-                          /* You could also implement a click event to post comment here */
+                          // Optionally implement a click event for posting a comment
                         }}
                       >
                         Post
@@ -168,19 +162,13 @@ const Home = () => {
 
           {/* Right Section: Follow Suggestions */}
           <div className="w-1/3">
-            <div
-              className={`p-4 rounded-md shadow-md ${
-                darkMode ? "bg-gray-800" : "bg-white"
-              }`}
-            >
+            <div className={`p-4 rounded-md shadow-md ${darkMode ? "bg-black" : "bg-white"}`}>
               <h2 className="text-lg font-bold mb-2">Suggestions</h2>
               <div className="space-y-4">
                 {suggestions.map((user) => (
                   <div
                     key={user.id}
-                    className={`flex items-center justify-between p-2 rounded-md ${
-                      darkMode ? "bg-gray-700" : "bg-gray-200"
-                    }`}
+                    className={`flex items-center justify-between p-2 rounded-md ${darkMode ? "bg-black" : "bg-white"}`}
                   >
                     <div className="flex items-center space-x-4">
                       <img

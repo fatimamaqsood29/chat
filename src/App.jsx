@@ -25,20 +25,17 @@ function AppContent() {
   const hideNavbar = hideNavbarRoutes.includes(location.pathname);
 
   return (
-    <div className="min-h-screen flex relative">
-      {/* Fixed Navigation Bar */}
+    <div className="min-h-screen flex flex-col md:flex-row relative">
+      {/* Fixed Navigation Bar for larger screens */}
       {!hideNavbar && (
-        <div className="w-64 h-screen fixed left-0 bg-gray-100 dark:bg-gray-900">
-          <Navbar
-            setIsSearchOpen={setIsSearchOpen}
-            isSearchOpen={isSearchOpen}
-          />
+        <div className="w-full md:w-64 md:h-screen fixed md:left-0 bg-gray-100 dark:bg-gray-900 z-10">
+          <Navbar setIsSearchOpen={setIsSearchOpen} isSearchOpen={isSearchOpen} />
         </div>
       )}
 
       {/* Search Overlay */}
       {isSearchOpen && (
-        <div className="fixed top-0 left-20 w-96 h-screen border-r p-4 bg-white z-50 shadow-md dark:bg-gray-800">
+        <div className="fixed top-0 left-0 md:left-20 w-full md:w-96 h-screen border-r p-4 bg-white z-50 shadow-md dark:bg-gray-800">
           <SearchScreen onClose={() => setIsSearchOpen(false)} />
         </div>
       )}
@@ -46,7 +43,7 @@ function AppContent() {
       {/* Main Content Area */}
       <div
         className={`flex-grow p-4 ${
-          isSearchOpen ? 'ml-96' : hideNavbar ? 'ml-0' : 'ml-64'
+          isSearchOpen ? 'md:ml-96' : hideNavbar ? 'ml-0' : 'md:ml-64'
         } transition-all`}
       >
         <Toaster position="top-right" reverseOrder={false} />

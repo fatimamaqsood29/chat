@@ -1,13 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
 import followReducer from '../features/followSlice';
 import postReducer from '../features/postSlice';
-import reelsReducer from './reelsSlice';
+import imageReducer from './imageSlice';
 
 export default configureStore({
   reducer: {
     follow: followReducer,
     post: postReducer,
-    reels: reelsReducer,
-
+    images: imageReducer,
   },
 });
