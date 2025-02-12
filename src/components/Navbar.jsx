@@ -16,12 +16,14 @@ import {
   FaPlus,
   FaExchangeAlt,
 } from "react-icons/fa";
+import { useSelector } from 'react-redux';
 
 import { useThemeContext } from "../ThemeContext";
 
 export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
   const { darkMode, toggleTheme } = useThemeContext();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const { user } = useSelector((state) => state.auth); // Access user info from Redux
 
   return (
     <>
@@ -155,10 +157,30 @@ export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
           <FaCompass className="text-2xl" />
           <span className="text-sm">Explorer</span>
         </Link>
-        <Link to="/profile" className="flex flex-col items-center">
+         {/* <Link to="/profile" className="flex flex-col items-center">
           <FaUser className="text-2xl" />
           <span className="text-sm">Profile</span>
-        </Link>
+        </Link>  */}
+         {/* <Link to={`/profile/${userId}`} className="flex items-center text-2xl hover:text-blue-500">
+  <FaUser className="mr-4 text-3xl" />
+  {!isSearchOpen && "Profile"}
+</Link> */}
+    {/* <Link 
+      to={`/profile/${userInfo?._id}`} // Use optional chaining in case userInfo is null
+      className="flex items-center text-2xl hover:text-blue-500"
+    >
+          </Link> */}
+          <Link 
+  to={`/profile/${user?._id}`} 
+  className="flex items-center text-2xl hover:text-blue-500"
+>
+  <FaUser className="mr-4 text-3xl" />
+  {!isSearchOpen && "Profile"}
+</Link>
+
+
+
+
       </nav>
     </>
   );

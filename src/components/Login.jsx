@@ -7,8 +7,10 @@ import { toast } from 'react-hot-toast';
 import { FaUser, FaLock } from 'react-icons/fa';
 import { TextField, Button, Typography, Box, Paper } from '@mui/material';
 import { useThemeContext } from '../ThemeContext';
+//import { useDispatch } from 'react-redux';
 
 const loginSchema = z.object({
+  
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });

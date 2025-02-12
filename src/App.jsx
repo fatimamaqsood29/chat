@@ -54,7 +54,9 @@ function AppContent() {
           <Route path="/follow" element={<Follow />} />
           <Route path="/explorer" element={<ExplorerScreen />} />
           <Route path="/chat" element={<Chat />} />
-          <Route path="/profile" element={<ProfileScreen />} />
+          <Route path="/profile/:userId" element={<ProfileScreen />} />
+
+          {/* <Route path="/profile" element={<ProfileScreen />} /> */}
           <Route path="/edit-profile" element={<EditProfileScreen />} />
           <Route path="/create" element={<CreateScreen />} />
           <Route path="*" element={<Navigate to="/" />} />
