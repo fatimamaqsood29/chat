@@ -7,8 +7,8 @@ import { toast } from 'react-hot-toast';
 import { FaUser, FaLock } from 'react-icons/fa';
 import { TextField, Button, Typography, Box, Paper } from '@mui/material';
 import { useThemeContext } from '../ThemeContext';
-//import { useDispatch } from 'react-redux';
-
+import { useDispatch } from 'react-redux';
+import { loginSuccess } from '../features/authSlice';
 const loginSchema = z.object({
   
   email: z.string().email('Invalid email address'),
@@ -20,6 +20,7 @@ export default function Login() {
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(loginSchema),
   });
+  const dispatch = useDispatch();
 
   const { darkMode } = useThemeContext();
 
@@ -44,7 +45,8 @@ export default function Login() {
         const token = result.access_token;
   
         if (token) {
-          localStorage.setItem('accessToken', token); // Store the correct token
+          //localStorage.setItem('accessToken', token); // Store the correct token
+          dispatch(loginSuccess( {user: result.user, access_token: result.access_token}))
           toast.success('Logged in successfully!');
           navigate('/home');
         } else {

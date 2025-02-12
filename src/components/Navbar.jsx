@@ -64,7 +64,7 @@ export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
             </Link>
 
             <Link
-              to="/profile"
+              to={`/profile/${user?.id}`}
               className="flex items-center text-2xl hover:text-blue-500"
             >
               <FaUser className="mr-4 text-3xl" />
@@ -171,7 +171,7 @@ export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
     >
           </Link> */}
           <Link 
-  to={`/profile/${user?._id}`} 
+  to={`/profile/${user?.id}`} 
   className="flex items-center text-2xl hover:text-blue-500"
 >
   <FaUser className="mr-4 text-3xl" />
