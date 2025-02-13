@@ -4,6 +4,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Box, Avatar, Typography, Grid, Button, Tabs, Tab } from "@mui/material";
+import { useSelector } from "react-redux";
 
 function ProfileScreen() {
   const navigate = useNavigate();
@@ -16,6 +17,11 @@ function ProfileScreen() {
     profileImage: localStorage.getItem("profile_image") || "/default-avatar.png",
   });
   const [uploadedImages, setUploadedImages] = useState([]);
+
+  // Retrieve followers and following from the redux store (or default to an empty array)
+  const followers = useSelector((state) => state.follow.followers) || [];
+  const following = useSelector((state) => state.follow.following) || [];
+  const [totalPosts, setTotalPosts] = useState(0);
 
   useEffect(() => {
     // If coming from edit-profile with updated data, update state and localStorage
@@ -70,8 +76,10 @@ function ProfileScreen() {
       );
       if (Array.isArray(response.data)) {
         setUploadedImages(response.data);
+        setTotalPosts(response.data.length);
       } else {
         setUploadedImages([]);
+        setTotalPosts(0);
       }
     } catch (error) {
       console.error("Error fetching user posts:", error);
@@ -82,16 +90,50 @@ function ProfileScreen() {
   return (
     <Box sx={{ p: 4 }}>
       <ToastContainer />
+      {/* Profile Header */}
       <Box display="flex" alignItems="center" justifyContent="space-between">
-        <Box display="flex" alignItems="center" gap={2}>
+        <Box display="flex" alignItems="center" gap={3}>
           <Avatar
             src={profileData.profileImage}
             alt={profileData.name}
             sx={{ width: 80, height: 80 }}
           />
           <Box>
-            <Typography variant="h5">{profileData.name}</Typography>
+            <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+              {profileData.name}
+            </Typography>
             <Typography variant="body1">{profileData.bio}</Typography>
+            {/* Stats Section styled like Instagram Web with left margin */}
+            <Box display="flex" gap={3} mt={3} ml={99}>
+              <Box sx={{ cursor: "pointer" }}>
+                <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                  {totalPosts}
+                </Typography>
+                <Typography variant="body2">Posts</Typography>
+              </Box>
+              <Box
+                sx={{ cursor: "pointer" }}
+                onClick={() =>
+                  navigate("/follow", { state: { tab: "followers" } })
+                }
+              >
+                <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                  {followers.length}
+                </Typography>
+                <Typography variant="body2">Followers</Typography>
+              </Box>
+              <Box
+                sx={{ cursor: "pointer" }}
+                onClick={() =>
+                  navigate("/follow", { state: { tab: "following" } })
+                }
+              >
+                <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                  {following.length}
+                </Typography>
+                <Typography variant="body2">Following</Typography>
+              </Box>
+            </Box>
           </Box>
         </Box>
         <Button
@@ -104,6 +146,7 @@ function ProfileScreen() {
         </Button>
       </Box>
 
+      {/* Tabs Section */}
       <Tabs
         value={selectedTab}
         onChange={(e, newValue) => setSelectedTab(newValue)}
