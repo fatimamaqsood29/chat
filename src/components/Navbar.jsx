@@ -16,9 +16,10 @@ import {
   FaPlus,
   FaExchangeAlt,
 } from "react-icons/fa";
-import { useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 
 import { useThemeContext } from "../ThemeContext";
+import { logout } from "../features/authSlice"; // Import logout action
 
 export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
   const { darkMode, toggleTheme } = useThemeContext();
@@ -123,9 +124,11 @@ export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
                 <FaExchangeAlt className="mr-4 text-2xl" />
                 Switch Appearance
               </button>
+              
               <Link
-                to="/logout"
+                to="/login"
                 className="flex items-center px-4 py-2 hover:bg-red-500 focus:outline-none"
+                onClick={() => dispatch(logout())} // Dispatch logout action
               >
                 <FaSignOutAlt className="mr-4 text-2xl" />
                 Logout
@@ -157,30 +160,14 @@ export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
           <FaCompass className="text-2xl" />
           <span className="text-sm">Explorer</span>
         </Link>
-         {/* <Link to="/profile" className="flex flex-col items-center">
-          <FaUser className="text-2xl" />
-          <span className="text-sm">Profile</span>
-        </Link>  */}
-         {/* <Link to={`/profile/${userId}`} className="flex items-center text-2xl hover:text-blue-500">
-  <FaUser className="mr-4 text-3xl" />
-  {!isSearchOpen && "Profile"}
-</Link> */}
-    {/* <Link 
-      to={`/profile/${userInfo?._id}`} // Use optional chaining in case userInfo is null
-      className="flex items-center text-2xl hover:text-blue-500"
-    >
-          </Link> */}
-          <Link 
-  to={`/profile/${user?.id}`} 
-  className="flex items-center text-2xl hover:text-blue-500"
->
-  <FaUser className="mr-4 text-3xl" />
-  {!isSearchOpen && "Profile"}
-</Link>
-
-
-
-
+        
+        <Link
+          to={`/profile/${user?.id}`}
+          className="flex items-center text-2xl hover:text-blue-500"
+        >
+          <FaUser className="mr-4 text-3xl" />
+          {!isSearchOpen && "Profile"}
+        </Link>
       </nav>
     </>
   );

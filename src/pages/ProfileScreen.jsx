@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Box, Avatar, Typography, Grid, Button, Tabs, Tab } from "@mui/material";
@@ -8,11 +8,12 @@ import { Box, Avatar, Typography, Grid, Button, Tabs, Tab } from "@mui/material"
 function ProfileScreen() {
   const navigate = useNavigate();
   const { userId } = useParams();
+  const location = useLocation();
   const [selectedTab, setSelectedTab] = useState("post");
   const [profileData, setProfileData] = useState({
-    name: "John Doe",
-    bio: "",
-    profileImage: "",
+    name: localStorage.getItem("profile_name") || "John Doe",
+    bio: localStorage.getItem("profile_bio") || "",
+    profileImage: localStorage.getItem("profile_image") || "/default-avatar.png", // Retrieve profile image from local storage
   });
   const [uploadedImages, setUploadedImages] = useState([]);
   const [totalPosts, setTotalPosts] = useState(0);
@@ -20,7 +21,7 @@ function ProfileScreen() {
   useEffect(() => {
     fetchProfileData();
     fetchUserPosts();
-  }, [userId]);
+  }, [userId, location.key]); // Re-fetch data when userId or location.key changes
 
   const fetchProfileData = async () => {
     try {
@@ -32,26 +33,25 @@ function ProfileScreen() {
       }
 
       const response = await axios.get(
-        `https://bases-pd-dg-mods.trycloudflare.com/api/users/profile/${userId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${import.meta.env.VITE_API_BASE_URL}/api/users/profile/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       setProfileData({
-        name: response.data.name,
-        bio: response.data.bio,
-        profileImage: response.data.profileImage || "/default-avatar.png",
+        name: response.data.name || localStorage.getItem("profile_name"),
+        bio: response.data.bio || localStorage.getItem("profile_bio"),
+        profileImage: response.data.profileImage || localStorage.getItem("profile_image") || "/default-avatar.png",
       });
     } catch (error) {
       console.error("Error fetching profile data:", error);
+      toast.error("Failed to load profile. Please try again.");
     }
   };
 
   const fetchUserPosts = async () => {
     try {
       const response = await axios.get(
-        `https://bases-pd-dg-mods.trycloudflare.com/api/posts/users/${userId}/posts`
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/users/${userId}/posts`
       );
       if (Array.isArray(response.data)) {
         setUploadedImages(response.data);
@@ -61,6 +61,7 @@ function ProfileScreen() {
       }
     } catch (error) {
       console.error("Error fetching user posts:", error);
+      toast.error("Failed to load posts. Please try again.");
     }
   };
 
@@ -81,7 +82,7 @@ function ProfileScreen() {
         </Box>
         <Button
           variant="outlined"
-          onClick={() => navigate("/edit-profile", { state: { profileData } })}
+          onClick={() => navigate("/edit-profile", { state: { profileData, userId } })}
         >
           Edit Profile
         </Button>
