@@ -9,7 +9,11 @@ function EditProfileScreen() {
   const navigate = useNavigate();
   const { state } = useLocation();
   const userId = state?.userId;
-  const initialProfile = state?.profileData || { name: "", bio: "", profileImage: "" };
+  const initialProfile = state?.profileData || {
+    name: localStorage.getItem("profile_name") || "",
+    bio: localStorage.getItem("profile_bio") || "",
+    profileImage: localStorage.getItem("profile_image") || "/default-avatar.png",
+  };
 
   const [name, setName] = useState(initialProfile.name);
   const [bio, setBio] = useState(initialProfile.bio);
@@ -45,15 +49,37 @@ function EditProfileScreen() {
     try {
       const response = await axios.put(
         `${import.meta.env.VITE_API_BASE_URL}/api/users/profile/update`,
-        { name, bio, profileImage },
+        { 
+          name, 
+          bio, 
+          profile_picture: profileImage  // send the key the API expects
+        },
         { headers: { Authorization: `Bearer ${storedToken}` } }
       );
 
+      console.log("Update response:", response.data);
+      // Since the API response doesn't return the updated user data,
+      // we'll use the submitted values.
+      const updatedName = name;
+      const updatedBio = bio;
+      const updatedImage = profileImage;
+
+      // Update local storage with the new data
+      localStorage.setItem("profile_name", updatedName);
+      localStorage.setItem("profile_bio", updatedBio);
+      localStorage.setItem("profile_image", updatedImage || "/default-avatar.png");
+
+      // Navigate back to the profile screen with the updated data
+      navigate(`/profile/${userId}`, {
+        state: {
+          profileData: {
+            name: updatedName,
+            bio: updatedBio,
+            profileImage: updatedImage,
+          },
+        },
+      });
       toast.success("Profile updated successfully!");
-      localStorage.setItem("profile_image", profileImage); // Store profile image in local storage
-      localStorage.setItem("profile_name", name); // Store profile name in local storage
-      localStorage.setItem("profile_bio", bio); // Store profile bio in local storage
-      setTimeout(() => navigate(`/profile/${userId}`), 1000); // Navigate back to profile
     } catch (error) {
       console.error("Error updating profile:", error);
       if (error.response?.status === 401) {
@@ -74,8 +100,22 @@ function EditProfileScreen() {
         <input type="file" accept="image/*" onChange={handleImageUpload} />
       </Box>
 
-      <TextField fullWidth label="Name" value={name} onChange={(e) => setName(e.target.value)} sx={{ mb: 2 }} />
-      <TextField fullWidth label="Bio" value={bio} onChange={(e) => setBio(e.target.value)} multiline rows={3} sx={{ mb: 2 }} />
+      <TextField
+        fullWidth
+        label="Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        sx={{ mb: 2 }}
+      />
+      <TextField
+        fullWidth
+        label="Bio"
+        value={bio}
+        onChange={(e) => setBio(e.target.value)}
+        multiline
+        rows={3}
+        sx={{ mb: 2 }}
+      />
 
       <Button variant="contained" color="primary" onClick={handleSave}>
         Save Changes

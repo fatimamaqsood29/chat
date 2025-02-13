@@ -13,15 +13,24 @@ function ProfileScreen() {
   const [profileData, setProfileData] = useState({
     name: localStorage.getItem("profile_name") || "John Doe",
     bio: localStorage.getItem("profile_bio") || "",
-    profileImage: localStorage.getItem("profile_image") || "/default-avatar.png", // Retrieve profile image from local storage
+    profileImage: localStorage.getItem("profile_image") || "/default-avatar.png",
   });
   const [uploadedImages, setUploadedImages] = useState([]);
-  const [totalPosts, setTotalPosts] = useState(0);
 
   useEffect(() => {
-    fetchProfileData();
+    // If coming from edit-profile with updated data, update state and localStorage
+    if (location.state?.profileData) {
+      const { name, bio, profileImage } = location.state.profileData;
+      setProfileData({ name, bio, profileImage });
+      localStorage.setItem("profile_name", name);
+      localStorage.setItem("profile_bio", bio);
+      localStorage.setItem("profile_image", profileImage || "/default-avatar.png");
+    } else {
+      // Otherwise, fetch from API
+      fetchProfileData();
+    }
     fetchUserPosts();
-  }, [userId, location.key]); // Re-fetch data when userId or location.key changes
+  }, [userId, location.key]);
 
   const fetchProfileData = async () => {
     try {
@@ -31,17 +40,23 @@ function ProfileScreen() {
         navigate("/login");
         return;
       }
-
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/api/users/profile/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      setProfileData({
-        name: response.data.name || localStorage.getItem("profile_name"),
-        bio: response.data.bio || localStorage.getItem("profile_bio"),
-        profileImage: response.data.profileImage || localStorage.getItem("profile_image") || "/default-avatar.png",
-      });
+      if (response.data) {
+        // Use the API's returned data (if nested under 'user', adjust accordingly)
+        const userData = response.data.user ? response.data.user : response.data;
+        const updatedData = {
+          name: userData.name || "John Doe",
+          bio: userData.bio || "",
+          profileImage: userData.profile_picture || "/default-avatar.png",
+        };
+        setProfileData(updatedData);
+        localStorage.setItem("profile_name", updatedData.name);
+        localStorage.setItem("profile_bio", updatedData.bio);
+        localStorage.setItem("profile_image", updatedData.profileImage);
+      }
     } catch (error) {
       console.error("Error fetching profile data:", error);
       toast.error("Failed to load profile. Please try again.");
@@ -55,7 +70,6 @@ function ProfileScreen() {
       );
       if (Array.isArray(response.data)) {
         setUploadedImages(response.data);
-        setTotalPosts(response.data.length);
       } else {
         setUploadedImages([]);
       }
@@ -82,7 +96,9 @@ function ProfileScreen() {
         </Box>
         <Button
           variant="outlined"
-          onClick={() => navigate("/edit-profile", { state: { profileData, userId } })}
+          onClick={() =>
+            navigate("/edit-profile", { state: { profileData, userId } })
+          }
         >
           Edit Profile
         </Button>
