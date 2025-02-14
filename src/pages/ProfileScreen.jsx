@@ -110,8 +110,46 @@ function ProfileScreen() {
     }
   };
 
-  // Handlers to open/close the modal dialog
-  const handleOpenDialog = (type) => {
+  // New helper functions to fetch followers and following details
+  const fetchFollowers = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/users/followers`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (Array.isArray(response.data)) {
+        setProfileFollowers(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching followers:", error);
+      toast.error("Failed to load followers. Please try again.");
+    }
+  };
+
+  const fetchFollowing = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/users/following`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (Array.isArray(response.data)) {
+        setProfileFollowing(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching following:", error);
+      toast.error("Failed to load following. Please try again.");
+    }
+  };
+
+  // Updated handler to open the modal dialog
+  const handleOpenDialog = async (type) => {
+    if (type === "followers") {
+      await fetchFollowers();
+    } else if (type === "following") {
+      await fetchFollowing();
+    }
     setDialogType(type);
     setOpenDialog(true);
   };
