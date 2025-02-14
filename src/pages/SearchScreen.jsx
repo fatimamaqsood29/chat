@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import { useThemeContext } from '../ThemeContext';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 export default function SearchScreen({ onClose }) {
@@ -10,7 +11,6 @@ export default function SearchScreen({ onClose }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Get token from localStorage
   const token = localStorage.getItem('access_token');
 
   useEffect(() => {
@@ -24,9 +24,7 @@ export default function SearchScreen({ onClose }) {
       try {
         const response = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/api/users/search/${query}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setResults(response.data);
       } catch (err) {
@@ -40,7 +38,7 @@ export default function SearchScreen({ onClose }) {
       setLoading(false);
     };
 
-    // Debounce the search input
+    // Debounce the search to reduce API calls
     const delayDebounceFn = setTimeout(() => {
       fetchResults();
     }, 300);
@@ -81,13 +79,17 @@ export default function SearchScreen({ onClose }) {
             {results.map((user) => (
               <li
                 key={user._id}
-                className={`flex justify-between p-2 border-b ${
+                className={`flex items-center justify-between p-2 border-b ${
                   darkMode ? 'border-gray-600' : 'border-gray-300'
                 }`}
               >
-                <span>
-                  {user.name} ({user.email})
-                </span>
+                {/* Clicking on the username navigates to the user's profile page */}
+                <Link to={`/profile/${user._id}`} className="flex-1">
+                  <span className="font-medium">{user.name}</span>
+                  {user.email && <span className="text-sm ml-2">({user.email})</span>}
+                </Link>
+                {/* You can add extra buttons like "Share" if needed */}
+                {/* <button className="ml-2 text-blue-500">Share</button> */}
               </li>
             ))}
           </ul>
@@ -96,6 +98,7 @@ export default function SearchScreen({ onClose }) {
         ) : (
           <div>
             <h3 className="text-lg font-semibold">Recent Searches</h3>
+            {/* Implement recent searches if desired */}
             <p>No recent searches.</p>
           </div>
         )}
