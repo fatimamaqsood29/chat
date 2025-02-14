@@ -5,7 +5,6 @@ import { Toaster } from 'react-hot-toast';
 import store from './store/store';
 import Login from './components/Login';
 import Signup from './components/Signup';
-import Follow from './pages/Follow';
 import Chat from './pages/Chat';
 import Navbar from './components/Navbar';
 import ProfileScreen from './pages/ProfileScreen';
@@ -51,7 +50,6 @@ function AppContent() {
           <Route path="/" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/follow" element={<Follow />} />
           <Route path="/explorer" element={<ExplorerScreen />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/profile/:userId" element={<ProfileScreen />} />

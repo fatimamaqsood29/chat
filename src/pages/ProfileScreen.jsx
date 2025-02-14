@@ -1,10 +1,26 @@
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Box, Avatar, Typography, Grid, Button, Tabs, Tab } from "@mui/material";
-import { useSelector } from "react-redux";
+import {
+  Box,
+  Avatar,
+  Typography,
+  Grid,
+  Button,
+  Tabs,
+  Tab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  IconButton,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 
 function ProfileScreen() {
   const navigate = useNavigate();
@@ -16,18 +32,22 @@ function ProfileScreen() {
     bio: localStorage.getItem("profile_bio") || "",
     profileImage: localStorage.getItem("profile_image") || "/default-avatar.png",
   });
+  const [profileFollowers, setProfileFollowers] = useState([]);
+  const [profileFollowing, setProfileFollowing] = useState([]);
   const [uploadedImages, setUploadedImages] = useState([]);
-
-  // Retrieve followers and following from the redux store (or default to an empty array)
-  const followers = useSelector((state) => state.follow.followers) || [];
-  const following = useSelector((state) => state.follow.following) || [];
   const [totalPosts, setTotalPosts] = useState(0);
+
+  // State for the modal dialog
+  const [openDialog, setOpenDialog] = useState(false);
+  const [dialogType, setDialogType] = useState(""); // "followers", "following", or "posts"
 
   useEffect(() => {
     // If coming from edit-profile with updated data, update state and localStorage
     if (location.state?.profileData) {
-      const { name, bio, profileImage } = location.state.profileData;
+      const { name, bio, profileImage, followers, following } = location.state.profileData;
       setProfileData({ name, bio, profileImage });
+      if (followers) setProfileFollowers(followers);
+      if (following) setProfileFollowing(following);
       localStorage.setItem("profile_name", name);
       localStorage.setItem("profile_bio", bio);
       localStorage.setItem("profile_image", profileImage || "/default-avatar.png");
@@ -51,7 +71,7 @@ function ProfileScreen() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.data) {
-        // Use the API's returned data (if nested under 'user', adjust accordingly)
+        // Adjust based on your API’s structure
         const userData = response.data.user ? response.data.user : response.data;
         const updatedData = {
           name: userData.name || "John Doe",
@@ -59,6 +79,9 @@ function ProfileScreen() {
           profileImage: userData.profile_picture || "/default-avatar.png",
         };
         setProfileData(updatedData);
+        // Assume the API returns arrays of full user objects for followers and following
+        setProfileFollowers(userData.followers || []);
+        setProfileFollowing(userData.following || []);
         localStorage.setItem("profile_name", updatedData.name);
         localStorage.setItem("profile_bio", updatedData.bio);
         localStorage.setItem("profile_image", updatedData.profileImage);
@@ -87,6 +110,17 @@ function ProfileScreen() {
     }
   };
 
+  // Handlers to open/close the modal dialog
+  const handleOpenDialog = (type) => {
+    setDialogType(type);
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setDialogType("");
+  };
+
   return (
     <Box sx={{ p: 4 }}>
       <ToastContainer />
@@ -103,33 +137,23 @@ function ProfileScreen() {
               {profileData.name}
             </Typography>
             <Typography variant="body1">{profileData.bio}</Typography>
-            {/* Stats Section styled like Instagram Web with left margin */}
-            <Box display="flex" gap={3} mt={3} ml={99}>
-              <Box sx={{ cursor: "pointer" }}>
+            {/* Stats Section styled like Instagram Web */}
+            <Box display="flex" gap={3} mt={3}>
+              <Box sx={{ cursor: "pointer" }} onClick={() => handleOpenDialog("posts")}>
                 <Typography variant="h6" sx={{ fontWeight: "bold" }}>
                   {totalPosts}
                 </Typography>
                 <Typography variant="body2">Posts</Typography>
               </Box>
-              <Box
-                sx={{ cursor: "pointer" }}
-                onClick={() =>
-                  navigate("/follow", { state: { tab: "followers" } })
-                }
-              >
+              <Box sx={{ cursor: "pointer" }} onClick={() => handleOpenDialog("followers")}>
                 <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                  {followers.length}
+                  {profileFollowers.length}
                 </Typography>
                 <Typography variant="body2">Followers</Typography>
               </Box>
-              <Box
-                sx={{ cursor: "pointer" }}
-                onClick={() =>
-                  navigate("/follow", { state: { tab: "following" } })
-                }
-              >
+              <Box sx={{ cursor: "pointer" }} onClick={() => handleOpenDialog("following")}>
                 <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                  {following.length}
+                  {profileFollowing.length}
                 </Typography>
                 <Typography variant="body2">Following</Typography>
               </Box>
@@ -180,6 +204,57 @@ function ProfileScreen() {
           ))}
         </Grid>
       )}
+
+      {/* Modal Dialog for Followers/Following/Posts */}
+      <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
+        <DialogTitle>
+          {dialogType === "followers" && "Followers"}
+          {dialogType === "following" && "Following"}
+          {dialogType === "posts" && "Posts"}
+          <IconButton
+            aria-label="close"
+            onClick={handleCloseDialog}
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: 8,
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          {(dialogType === "followers" || dialogType === "following") && (
+            <List>
+              {(dialogType === "followers" ? profileFollowers : profileFollowing).map((user, index) => (
+                <ListItem key={user._id || user.id || index}>
+                  <ListItemAvatar>
+                    <Avatar src={user.profile_picture || "/default-avatar.png"} />
+                  </ListItemAvatar>
+                  <ListItemText 
+                    primary={user.name || "Unknown"} 
+                    secondary={user.email || ""} 
+                  />
+                </ListItem>
+              ))}
+            </List>
+          )}
+          {dialogType === "posts" && (
+            <List>
+              {uploadedImages.map((image, index) => (
+                <ListItem key={image._id || index}>
+                  <Avatar
+                    variant="rounded"
+                    src={image.image_url}
+                    sx={{ width: 56, height: 56, mr: 2 }}
+                  />
+                  <ListItemText primary={image.caption || "No Caption"} />
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }

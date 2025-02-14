@@ -2,7 +2,7 @@ import React from "react";
 import { useThemeContext } from "../ThemeContext";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleLikePost, toggleCommentInput, addCommentToPost } from "../features/postSlice";
-import { addFollowing, removeFollowing } from "../features/followSlice";
+import { followUser, unfollowUser } from "../features/followSlice";
 
 const stories = [
   { id: 1, username: "mishi_262", img: "https://via.placeholder.com/50" },
@@ -18,10 +18,9 @@ const Home = () => {
   const followingRedux = useSelector((state) => state.follow.following);
   const suggestionsFromStore = useSelector((state) => state.follow.suggestions || []);
 
-  // Filter out suggestions the user is already following
-  const suggestions = suggestionsFromStore.filter(
-    (user) => !followingRedux.some((follow) => follow.id === user.id)
-  );
+  // Here we use the complete suggestions list;
+  // we determine whether a suggestion is already followed by checking the redux state.
+  const suggestions = suggestionsFromStore;
 
   const handleLikeToggle = (postId) => {
     dispatch(toggleLikePost(postId));
@@ -36,17 +35,16 @@ const Home = () => {
     dispatch(addCommentToPost({ postId, commentText }));
   };
 
-  const handleFollowToggle = (userId) => {
+  // Toggle follow status by dispatching the appropriate async thunk
+  const handleFollowToggle = (userId, isFollowing) => {
     if (!userId) {
       console.error("Invalid userId:", userId);
       return;
     }
-
-    const user = suggestions.find((u) => u.id === userId);
-    if (user?.following) {
-      dispatch(removeFollowing(userId));
+    if (isFollowing) {
+      dispatch(unfollowUser(userId));
     } else {
-      dispatch(addFollowing({ id: userId, username: user?.username }));
+      dispatch(followUser(userId));
     }
   };
 
@@ -113,9 +111,7 @@ const Home = () => {
                       <input
                         type="text"
                         placeholder="Add a comment..."
-                        className={`w-full border rounded-md p-2 text-sm ${
-                          darkMode ? "bg-black text-white" : "bg-white text-black"
-                        }`}
+                        className={`w-full border rounded-md p-2 text-sm ${darkMode ? "bg-black text-white" : "bg-white text-black"}`}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             handleAddComment(post.id, e.target.value);
@@ -136,22 +132,23 @@ const Home = () => {
             <div className={`p-4 rounded-md shadow-md ${darkMode ? "bg-black" : "bg-white"}`}>
               <h2 className="text-lg font-bold mb-2">Suggestions</h2>
               <div className="space-y-4">
-                {suggestions.map((user) => (
-                  <div key={user.id} className={`flex items-center justify-between p-2 rounded-md ${darkMode ? "bg-black" : "bg-white"}`}>
-                    <div className="flex items-center space-x-4">
-                      <img src={user.img || "https://via.placeholder.com/50"} alt={user.username} className="w-10 h-10 rounded-full" />
-                      <p className="text-sm">{user.username}</p>
+                {suggestions.map((user) => {
+                  const isFollowing = followingRedux.some(u => u.id === user.id);
+                  return (
+                    <div key={user.id} className={`flex items-center justify-between p-2 rounded-md ${darkMode ? "bg-black" : "bg-white"}`}>
+                      <div className="flex items-center space-x-4">
+                        <img src={user.img || "https://via.placeholder.com/50"} alt={user.username} className="w-10 h-10 rounded-full" />
+                        <p className="text-sm">{user.username}</p>
+                      </div>
+                      <button
+                        onClick={() => handleFollowToggle(user.id, isFollowing)}
+                        className={`px-4 py-1 rounded-md text-xs ${isFollowing ? "bg-green-500 text-white" : "bg-blue-500 text-white"}`}
+                      >
+                        {isFollowing ? "Following" : "Follow"}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleFollowToggle(user.id)}
-                      className={`px-4 py-1 rounded-md text-xs ${
-                        user.following ? "bg-green-500 text-white" : "bg-blue-500 text-white"
-                      }`}
-                    >
-                      {user.following ? "Following" : "Follow"}
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
                 {suggestions.length === 0 && <p className="text-sm">No suggestions available</p>}
               </div>
             </div>
