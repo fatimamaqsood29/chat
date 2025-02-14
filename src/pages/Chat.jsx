@@ -1,4 +1,3 @@
-// Chat.js
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaPaperPlane } from 'react-icons/fa';
@@ -22,39 +21,31 @@ import { useSelector } from 'react-redux';
 export default function Chat() {
   const { darkMode } = useThemeContext();
 
-  // Retrieve followers and following from the Redux store
   const followers = useSelector((state) => state.follow.followers);
   const following = useSelector((state) => state.follow.following);
 
-  // Only allow chatting with users who are mutual (i.e. appear in both lists)
   const chatUsers = followers.filter((follower) =>
     following.some((user) => user.id === follower.id)
   );
 
-  // State for the currently selected chat user (defaults to the first mutual friend, if any)
   const [selectedChatUser, setSelectedChatUser] = useState(
     chatUsers.length > 0 ? chatUsers[0] : null
   );
 
-  // Update default selection if mutual friends update
   useEffect(() => {
     if (!selectedChatUser && chatUsers.length > 0) {
       setSelectedChatUser(chatUsers[0]);
     }
   }, [chatUsers, selectedChatUser]);
 
-  // Chat conversation states
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
-  // This search query is used to filter the chat sidebar (the list of allowed chat users)
   const [chatSearchQuery, setChatSearchQuery] = useState('');
 
-  // Clear conversation when switching chat users
   useEffect(() => {
     setMessages([]);
   }, [selectedChatUser]);
 
-  // Simulate a reply from the other user when you send a message
   useEffect(() => {
     if (
       messages.length > 0 &&
@@ -86,28 +77,18 @@ export default function Chat() {
     }
   };
 
-  // Filter the chat users list based on the sidebar search query
   const filteredChatUsers = chatUsers.filter((user) =>
     user.username.toLowerCase().includes(chatSearchQuery.toLowerCase())
   );
 
   return (
-    <Box
-      minHeight="100vh"
-      display="flex"
-      bgcolor={darkMode ? 'background.default' : 'background.paper'}
-    >
-      {/* LEFT SIDEBAR: List of Mutual Friends */}
+    <Box minHeight="100vh" display="flex" bgcolor={darkMode ? 'background.default' : 'background.paper'}>
       <Box
         width={{ xs: '100%', sm: 300 }}
         borderRight={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}
         display={{ xs: 'none', sm: 'block' }}
       >
-        <Box
-          px={2}
-          py={1}
-          borderBottom={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}
-        >
+        <Box px={2} py={1} borderBottom={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}>
           <TextField
             fullWidth
             value={chatSearchQuery}
@@ -126,12 +107,7 @@ export default function Chat() {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon
-                    sx={{
-                      color: darkMode ? '#FFFFFF80' : '#00000080',
-                      marginRight: '8px',
-                    }}
-                  />
+                  <SearchIcon sx={{ color: darkMode ? '#FFFFFF80' : '#00000080', marginRight: '8px' }} />
                 </InputAdornment>
               ),
             }}
@@ -154,31 +130,15 @@ export default function Chat() {
         </Box>
       </Box>
 
-      {/* RIGHT SIDE: Chat Conversation */}
       <Box display="flex" flexDirection="column" flex="1">
-        {/* Chat Header */}
-        <Box
-          display="flex"
-          alignItems="center"
-          px={2}
-          py={1.5}
-          borderBottom={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}
-        >
+        <Box display="flex" alignItems="center" px={2} py={1.5} borderBottom={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}>
           {selectedChatUser ? (
             <>
               <Avatar
                 src={selectedChatUser.img || 'https://via.placeholder.com/150'}
-                sx={{
-                  width: 40,
-                  height: 40,
-                  mr: 2,
-                  border: `2px solid ${darkMode ? '#757575' : '#e0e0e0'}`,
-                }}
+                sx={{ width: 40, height: 40, mr: 2, border: `2px solid ${darkMode ? '#757575' : '#e0e0e0'}` }}
               />
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 600, color: darkMode ? '#fff' : '#000' }}
-              >
+              <Typography variant="h6" sx={{ fontWeight: 600, color: darkMode ? '#fff' : '#000' }}>
                 {selectedChatUser.username}
               </Typography>
             </>
@@ -189,7 +149,6 @@ export default function Chat() {
           )}
         </Box>
 
-        {/* Chat Messages Section */}
         <Box
           flex="1"
           p={2}
@@ -197,13 +156,8 @@ export default function Chat() {
             maxHeight: 'calc(100vh - 160px)',
             overflowY: 'auto',
             '&::-webkit-scrollbar': { width: '6px' },
-            '&::-webkit-scrollbar-track': {
-              background: darkMode ? '#424242' : '#f1f1f1',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              background: darkMode ? '#757575' : '#888',
-              borderRadius: '4px',
-            },
+            '&::-webkit-scrollbar-track': { background: darkMode ? '#424242' : '#f1f1f1' },
+            '&::-webkit-scrollbar-thumb': { background: darkMode ? '#757575' : '#888', borderRadius: '4px' },
           }}
         >
           {messages.map((msg) => (
@@ -216,19 +170,9 @@ export default function Chat() {
                 maxWidth: '70%',
                 margin: msg.sender === 'me' ? '0 auto 16px 0' : '0 0 16px auto',
                 padding: '12px 16px',
-                borderRadius: msg.sender === 'me'
-                  ? '20px 20px 0 20px'
-                  : '20px 20px 20px 0',
-                backgroundColor: msg.sender === 'me'
-                  ? '#1976d2'
-                  : darkMode
-                  ? '#424242'
-                  : '#eeeeee',
-                color: msg.sender === 'me'
-                  ? '#fff'
-                  : darkMode
-                  ? '#fff'
-                  : '#000',
+                borderRadius: msg.sender === 'me' ? '20px 20px 0 20px' : '20px 20px 20px 0',
+                backgroundColor: msg.sender === 'me' ? '#1976d2' : darkMode ? '#424242' : '#eeeeee',
+                color: msg.sender === 'me' ? '#fff' : darkMode ? '#fff' : '#000',
                 fontSize: '0.875rem',
                 lineHeight: 1.4,
               }}
@@ -238,12 +182,7 @@ export default function Chat() {
           ))}
         </Box>
 
-        {/* Message Input */}
-        <Box
-          px={2}
-          py={2}
-          borderTop={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}
-        >
+        <Box px={2} py={2} borderTop={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}>
           <TextField
             fullWidth
             value={message}
@@ -251,26 +190,11 @@ export default function Chat() {
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
             variant="outlined"
             placeholder="Type a message..."
-            sx={{
-              backgroundColor: darkMode ? '#424242' : '#FFFFFF',
-              borderRadius: '30px',
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '30px',
-                paddingRight: '8px',
-              },
-            }}
+            sx={{ backgroundColor: darkMode ? '#424242' : '#FFFFFF', borderRadius: '30px' }}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton
-                    onClick={sendMessage}
-                    sx={{
-                      color: darkMode ? '#fff' : '#1976d2',
-                      '&:hover': {
-                        backgroundColor: darkMode ? '#ffffff1a' : '#1976d20a',
-                      },
-                    }}
-                  >
+                  <IconButton onClick={sendMessage} sx={{ color: darkMode ? '#fff' : '#1976d2' }}>
                     <FaPaperPlane />
                   </IconButton>
                 </InputAdornment>
