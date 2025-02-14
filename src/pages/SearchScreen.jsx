@@ -1,32 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import { useThemeContext } from '../ThemeContext';
+import axios from 'axios';
 
 export default function SearchScreen({ onClose }) {
   const { darkMode } = useThemeContext();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const recentSearches = [
-    { id: 1, username: 'duaazahra_', fullName: 'Dua Zahra' },
-    { id: 2, username: 'kkyz_0', fullName: 'Kaynat Khan' },
-    { id: 3, username: 'eshaminhas155', fullName: 'Esha Minhas' },
-    { id: 4, username: 'bint_e_afzal30', fullName: 'Bint Afzal' },
-    { id: 5, username: 'hira_mani', fullName: 'Hira Mani' },
-  ];
+  // Get token from localStorage
+  const token = localStorage.getItem('access_token');
+
+  useEffect(() => {
+    const fetchResults = async () => {
+      if (query.trim() === '') {
+        setResults([]);
+        return;
+      }
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/api/users/search/${query}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setResults(response.data);
+      } catch (err) {
+        console.error('API error:', err);
+        if (err.response) {
+          setError(`Error: ${err.response.status} - ${JSON.stringify(err.response.data)}`);
+        } else {
+          setError('Failed to fetch user');
+        }
+      }
+      setLoading(false);
+    };
+
+    // Debounce the search input
+    const delayDebounceFn = setTimeout(() => {
+      fetchResults();
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [query, token]);
 
   const handleSearch = (e) => {
-    const text = e.target.value;
-    setQuery(text);
-    if (text.trim() !== '') {
-      const filteredResults = recentSearches.filter((user) =>
-        user.username.toLowerCase().includes(text.toLowerCase()) ||
-        user.fullName.toLowerCase().includes(text.toLowerCase())
-      );
-      setResults(filteredResults);
-    } else {
-      setResults([]);
-    }
+    setQuery(e.target.value);
   };
 
   return (
@@ -43,16 +66,27 @@ export default function SearchScreen({ onClose }) {
         value={query}
         onChange={handleSearch}
         placeholder="Search users"
-        className={`w-full p-3 border rounded-md focus:outline-none ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}
+        className={`w-full p-3 border rounded-md focus:outline-none ${
+          darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'
+        }`}
       />
 
       <div className="mt-4">
-        {results.length > 0 ? (
+        {loading ? (
+          <p>Loading...</p>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
+        ) : results.length > 0 ? (
           <ul>
             {results.map((user) => (
-              <li key={user.id} className={`flex justify-between p-2 border-b ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
+              <li
+                key={user._id}
+                className={`flex justify-between p-2 border-b ${
+                  darkMode ? 'border-gray-600' : 'border-gray-300'
+                }`}
+              >
                 <span>
-                  {user.username} ({user.fullName})
+                  {user.name} ({user.email})
                 </span>
               </li>
             ))}
@@ -61,17 +95,8 @@ export default function SearchScreen({ onClose }) {
           <p className="text-gray-500">No users found</p>
         ) : (
           <div>
-            <h3 className="text-lg font-semibold">Recent</h3>
-            <ul>
-              {recentSearches.map((user) => (
-                <li key={user.id} className={`flex justify-between p-2 border-b ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
-                  <span>
-                    {user.username} ({user.fullName})
-                  </span>
-                  <button className="text-red-500">✖</button>
-                </li>
-              ))}
-            </ul>
+            <h3 className="text-lg font-semibold">Recent Searches</h3>
+            <p>No recent searches.</p>
           </div>
         )}
       </div>
