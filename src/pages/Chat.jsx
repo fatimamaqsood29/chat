@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { FaPaperPlane } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
@@ -13,195 +14,244 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
+  CircularProgress,
+  Badge,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { useThemeContext } from '../ThemeContext';
-import { useSelector } from 'react-redux';
+import { fetchChatrooms, fetchMessages, sendMessage, setCurrentChatroom } from '../features/chatSlice';
 
 export default function Chat() {
+  const dispatch = useDispatch();
   const { darkMode } = useThemeContext();
-
-  const followers = useSelector((state) => state.follow.followers);
-  const following = useSelector((state) => state.follow.following);
-
-  const chatUsers = followers.filter((follower) =>
-    following.some((user) => user.id === follower.id)
-  );
-
-  const [selectedChatUser, setSelectedChatUser] = useState(
-    chatUsers.length > 0 ? chatUsers[0] : null
-  );
+  const { chatrooms, currentChatroomId, messages, loading } = useSelector((state) => state.chat);
+  const currentUser = useSelector((state) => state.auth.user);
+  const [messageInput, setMessageInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    if (!selectedChatUser && chatUsers.length > 0) {
-      setSelectedChatUser(chatUsers[0]);
-    }
-  }, [chatUsers, selectedChatUser]);
+    dispatch(fetchChatrooms());
+  }, [dispatch]);
 
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([]);
-  const [chatSearchQuery, setChatSearchQuery] = useState('');
+  const handleSelectChatroom = (chatroomId) => {
+    dispatch(setCurrentChatroom(chatroomId));
+    dispatch(fetchMessages(chatroomId));
+  };
 
-  useEffect(() => {
-    setMessages([]);
-  }, [selectedChatUser]);
+  const handleSendMessage = async () => {
+    if (!messageInput.trim() || !currentChatroomId) return;
 
-  useEffect(() => {
-    if (
-      messages.length > 0 &&
-      messages[messages.length - 1].sender === 'me' &&
-      selectedChatUser
-    ) {
-      const timer = setTimeout(() => {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            id: prevMessages.length + 1,
-            text: `Hello from ${selectedChatUser.username}!`,
-            sender: 'them',
-          },
-        ]);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [messages, selectedChatUser]);
+    const tempMessage = {
+      _id: `temp-${Date.now()}`,
+      sender_id: currentUser._id,
+      message: messageInput,
+      timestamp: new Date().toISOString(),
+      sender_name: currentUser.name,
+      sender_profile: currentUser.profile_picture,
+    };
 
-  const sendMessage = () => {
-    if (message.trim() && selectedChatUser) {
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { id: prevMessages.length + 1, text: message, sender: 'me' },
-      ]);
-      setMessage('');
-      toast.success('Message sent!');
+    dispatch(addOptimisticMessage({
+      chatroomId: currentChatroomId,
+      message: tempMessage
+    }));
+
+    try {
+      await dispatch(sendMessage({ chatroomId: currentChatroomId, message: messageInput }));
+      setMessageInput('');
+    } catch (error) {
+      toast.error('Failed to send message');
     }
   };
 
-  const filteredChatUsers = chatUsers.filter((user) =>
-    user.username.toLowerCase().includes(chatSearchQuery.toLowerCase())
-  );
+  const currentChatroom = chatrooms.find(c => c._id === currentChatroomId);
+  const otherParticipant = currentChatroom?.participants.find(p => p._id !== currentUser._id);
+
+  const filteredChatrooms = chatrooms.filter(chatroom => {
+    const user = chatroom.participants.find(p => p._id !== currentUser._id);
+    return user?.name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
     <Box minHeight="100vh" display="flex" bgcolor={darkMode ? 'background.default' : 'background.paper'}>
-      <Box
-        width={{ xs: '100%', sm: 300 }}
-        borderRight={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}
-        display={{ xs: 'none', sm: 'block' }}
-      >
-        <Box px={2} py={1} borderBottom={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}>
+      {/* Chat List Sidebar */}
+      <Box width={{ xs: '100%', sm: 350 }} borderRight={`1px solid ${darkMode ? '#363636' : '#dbdbdb'}`}>
+        <Box p={2} borderBottom={`1px solid ${darkMode ? '#363636' : '#dbdbdb'}`}>
           <TextField
             fullWidth
-            value={chatSearchQuery}
-            onChange={(e) => setChatSearchQuery(e.target.value)}
-            variant="outlined"
-            placeholder="Search mutual friends..."
             size="small"
-            sx={{
-              backgroundColor: darkMode ? '#424242' : '#FFFFFF',
-              borderRadius: '4px',
-              '& .MuiOutlinedInput-root': {
-                height: '40px',
-                paddingRight: '8px',
-              },
-            }}
+            placeholder="Search messages"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ color: darkMode ? '#FFFFFF80' : '#00000080', marginRight: '8px' }} />
+                  <SearchIcon fontSize="small" />
                 </InputAdornment>
               ),
+              sx: {
+                borderRadius: 20,
+                bgcolor: darkMode ? '#262626' : '#fafafa',
+                '& fieldset': { border: 'none' },
+              }
             }}
           />
         </Box>
-        <Box sx={{ overflowY: 'auto', maxHeight: 'calc(100vh - 60px)' }}>
-          {filteredChatUsers.map((user) => (
-            <ListItem
-              key={user.id}
-              button
-              onClick={() => setSelectedChatUser(user)}
-              selected={selectedChatUser && selectedChatUser.id === user.id}
-            >
-              <ListItemAvatar>
-                <Avatar src={user.img || 'https://via.placeholder.com/150'} />
-              </ListItemAvatar>
-              <ListItemText primary={user.username} />
-            </ListItem>
-          ))}
-        </Box>
+
+        <List sx={{ overflowY: 'auto', height: 'calc(100vh - 120px)' }}>
+          {filteredChatrooms.map((chatroom) => {
+            const user = chatroom.participants.find(p => p._id !== currentUser._id);
+            return (
+              <ListItem
+                key={chatroom._id}
+                button
+                selected={chatroom._id === currentChatroomId}
+                onClick={() => handleSelectChatroom(chatroom._id)}
+                sx={{
+                  '&:hover': { bgcolor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                  py: 1.5
+                }}
+              >
+                <ListItemAvatar>
+                  <Badge
+                    color="primary"
+                    variant="dot"
+                    invisible={!chatroom.unread_count}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  >
+                    <Avatar src={user?.profile_picture} sx={{ width: 56, height: 56 }} />
+                  </Badge>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={user?.name}
+                  secondary={chatroom.last_message?.message}
+                  primaryTypographyProps={{
+                    fontWeight: 600,
+                    color: darkMode ? '#fff' : '#000'
+                  }}
+                  secondaryTypographyProps={{
+                    color: darkMode ? '#a8a8a8' : '#737373',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}
+                />
+              </ListItem>
+            );
+          })}
+        </List>
       </Box>
 
-      <Box display="flex" flexDirection="column" flex="1">
-        <Box display="flex" alignItems="center" px={2} py={1.5} borderBottom={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}>
-          {selectedChatUser ? (
-            <>
-              <Avatar
-                src={selectedChatUser.img || 'https://via.placeholder.com/150'}
-                sx={{ width: 40, height: 40, mr: 2, border: `2px solid ${darkMode ? '#757575' : '#e0e0e0'}` }}
-              />
-              <Typography variant="h6" sx={{ fontWeight: 600, color: darkMode ? '#fff' : '#000' }}>
-                {selectedChatUser.username}
-              </Typography>
-            </>
-          ) : (
-            <Typography variant="h6" sx={{ color: darkMode ? '#fff' : '#000' }}>
-              No mutual friend selected
-            </Typography>
-          )}
-        </Box>
+      {/* Chat Window */}
+      <Box flex={1} display="flex" flexDirection="column">
+        {currentChatroom ? (
+          <>
+            <Box
+              p={2}
+              display="flex"
+              alignItems="center"
+            
+                borderBottom={`1px solid ${darkMode ? '#363636' : '#dbdbdb'}`}
 
-        <Box
-          flex="1"
-          p={2}
-          sx={{
-            maxHeight: 'calc(100vh - 160px)',
-            overflowY: 'auto',
-            '&::-webkit-scrollbar': { width: '6px' },
-            '&::-webkit-scrollbar-track': { background: darkMode ? '#424242' : '#f1f1f1' },
-            '&::-webkit-scrollbar-thumb': { background: darkMode ? '#757575' : '#888', borderRadius: '4px' },
-          }}
-        >
-          {messages.map((msg) => (
-            <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              style={{
-                maxWidth: '70%',
-                margin: msg.sender === 'me' ? '0 auto 16px 0' : '0 0 16px auto',
-                padding: '12px 16px',
-                borderRadius: msg.sender === 'me' ? '20px 20px 0 20px' : '20px 20px 20px 0',
-                backgroundColor: msg.sender === 'me' ? '#1976d2' : darkMode ? '#424242' : '#eeeeee',
-                color: msg.sender === 'me' ? '#fff' : darkMode ? '#fff' : '#000',
-                fontSize: '0.875rem',
-                lineHeight: 1.4,
-              }}
             >
-              {msg.text}
-            </motion.div>
-          ))}
-        </Box>
+              <Avatar src={otherParticipant?.profile_picture} sx={{ width: 40, height: 40, mr: 2 }} />
+              <Typography variant="h6" fontWeight={600} color={darkMode ? '#fff' : '#000'}>
+                {otherParticipant?.name}
+              </Typography>
+            </Box>
 
-        <Box px={2} py={2} borderTop={`1px solid ${darkMode ? '#424242' : '#E0E0E0'}`}>
-          <TextField
-            fullWidth
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-            variant="outlined"
-            placeholder="Type a message..."
-            sx={{ backgroundColor: darkMode ? '#424242' : '#FFFFFF', borderRadius: '30px' }}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={sendMessage} sx={{ color: darkMode ? '#fff' : '#1976d2' }}>
-                    <FaPaperPlane />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Box>
+            <Box flex={1} overflow="auto" p={2} bgcolor={darkMode ? 'rgba(0,0,0,0.3)' : '#fafafa'}>
+              {loading ? (
+                <Box display="flex" justifyContent="center" mt={4}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : (
+                [...(messages[currentChatroomId] || [])].reverse().map((msg) => (
+                  <motion.div
+                    key={msg._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{
+                      display: 'flex',
+                      justifyContent: msg.sender_id === currentUser._id ? 'flex-end' : 'flex-start',
+                      marginBottom: 16
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'flex-end',
+                        maxWidth: '70%',
+                        gap: 1,
+                        flexDirection: msg.sender_id === currentUser._id ? 'row-reverse' : 'row'
+                      }}
+                    >
+                      {msg.sender_id !== currentUser._id && (
+                        <Avatar src={msg.sender_profile} sx={{ width: 32, height: 32 }} />
+                      )}
+                      <Box
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 18,
+                          bgcolor: msg.sender_id === currentUser._id
+                            ? darkMode ? '#0095f6' : '#3797f0'
+                            : darkMode ? '#262626' : '#ffffff',
+                          color: msg.sender_id === currentUser._id ? '#fff' : darkMode ? '#fff' : '#000',
+                          border: msg.sender_id !== currentUser._id
+                            ? `1px solid ${darkMode ? '#363636' : '#dbdbdb'}`
+                            : 'none'
+                        }}
+                      >
+                        <Typography variant="body2">{msg.message}</Typography>
+                        <Typography
+                          variant="caption"
+                          display="block"
+                          textAlign="right"
+                          color={msg.sender_id === currentUser._id ? '#ffffff80' : '#a8a8a8'}
+                          mt={0.5}
+                        >
+                          {new Date(msg.timestamp).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </motion.div>
+                ))
+              )}
+            </Box>
+
+            <Box p={2} borderTop={`1px solid ${darkMode ? '#363636' : '#dbdbdb'}`}>
+              <TextField
+                fullWidth
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                placeholder="Message..."
+                InputProps={{
+                  endAdornment: (
+                    <IconButton onClick={handleSendMessage} disabled={!messageInput.trim()}>
+                      <FaPaperPlane
+                        color={messageInput.trim() ? (darkMode ? '#fff' : '#000') : '#a8a8a8'}
+                      />
+                    </IconButton>
+                  ),
+                  sx: {
+                    borderRadius: 20,
+                    bgcolor: darkMode ? '#262626' : '#fafafa',
+                    '& fieldset': { border: 'none' },
+                  }
+                }}
+              />
+            </Box>
+          </>
+        ) : (
+          <Box flex={1} display="flex" alignItems="center" justifyContent="center">
+            <Typography color={darkMode ? '#a8a8a8' : '#737373'}>
+              Select a chat to start messaging
+            </Typography>
+          </Box>
+        )}
       </Box>
     </Box>
   );
