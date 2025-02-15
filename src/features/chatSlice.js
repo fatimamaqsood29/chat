@@ -3,6 +3,7 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// Fetch chatrooms
 export const fetchChatrooms = createAsyncThunk(
   'chat/fetchChatrooms',
   async (_, { rejectWithValue }) => {
@@ -13,11 +14,13 @@ export const fetchChatrooms = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      console.error('fetchChatrooms error:', error.response?.data || error.message);
+      return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
 
+// Fetch messages for a specific chatroom
 export const fetchMessages = createAsyncThunk(
   'chat/fetchMessages',
   async (chatroomId, { rejectWithValue }) => {
@@ -28,25 +31,28 @@ export const fetchMessages = createAsyncThunk(
       });
       return { chatroomId, messages: response.data };
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      console.error('fetchMessages error:', error.response?.data || error.message);
+      return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
 
+// Send a message (including both "message" and "chatroom_id" in the payload)
 export const sendMessage = createAsyncThunk(
   'chat/sendMessage',
-  async ({ chatroomId, message }, { rejectWithValue, dispatch }) => {
+  async ({ chatroomId, message, tempId }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem('access_token');
       const response = await axios.post(
         `${API_BASE_URL}/api/chat/message/${chatroomId}`,
-        { message },
+        { message, chatroom_id: chatroomId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      dispatch(fetchMessages(chatroomId)); // Refresh messages after sending
-      return response.data.data;
+      // Merge the API response with our temporary ID so we can replace the optimistic message
+      return { ...response.data.data, tempId };
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      console.error('sendMessage error:', error.response?.data || error.message);
+      return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
@@ -69,7 +75,13 @@ const chatSlice = createSlice({
     addOptimisticMessage: (state, action) => {
       const { chatroomId, message } = action.payload;
       if (!state.messages[chatroomId]) state.messages[chatroomId] = [];
-      state.messages[chatroomId].unshift(message);
+      state.messages[chatroomId].push(message);
+    },
+    removeFailedMessage: (state, action) => {
+      const { chatroomId, messageId } = action.payload;
+      state.messages[chatroomId] = state.messages[chatroomId].filter(
+        (msg) => msg._id !== messageId
+      );
     },
   },
   extraReducers: (builder) => {
@@ -79,10 +91,21 @@ const chatSlice = createSlice({
       })
       .addCase(fetchMessages.fulfilled, (state, action) => {
         const { chatroomId, messages } = action.payload;
-        state.messages[chatroomId] = messages.reverse();
+        state.messages[chatroomId] = messages;
+      })
+      .addCase(sendMessage.fulfilled, (state, action) => {
+        const { chatroom_id, tempId, ...sentMessage } = action.payload;
+        const messagesArray = state.messages[chatroom_id] || [];
+        const index = messagesArray.findIndex((msg) => msg._id === tempId);
+        if (index !== -1) {
+          messagesArray[index] = sentMessage;
+        } else {
+          messagesArray.push(sentMessage);
+        }
+        state.messages[chatroom_id] = messagesArray;
       });
   },
 });
 
-export const { setCurrentChatroom, addOptimisticMessage } = chatSlice.actions;
+export const { setCurrentChatroom, addOptimisticMessage, removeFailedMessage } = chatSlice.actions;
 export default chatSlice.reducer;

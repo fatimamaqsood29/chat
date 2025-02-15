@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { FaPaperPlane } from 'react-icons/fa';
@@ -19,7 +19,14 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { useThemeContext } from '../ThemeContext';
-import { fetchChatrooms, fetchMessages, sendMessage, setCurrentChatroom } from '../features/chatSlice';
+import {
+  fetchChatrooms,
+  fetchMessages,
+  sendMessage,
+  setCurrentChatroom,
+  addOptimisticMessage,
+  removeFailedMessage,
+} from '../features/chatSlice';
 
 export default function Chat() {
   const dispatch = useDispatch();
@@ -28,10 +35,17 @@ export default function Chat() {
   const currentUser = useSelector((state) => state.auth.user);
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const messagesEndRef = useRef(null);
 
+  // Fetch chatrooms when component mounts
   useEffect(() => {
     dispatch(fetchChatrooms());
   }, [dispatch]);
+
+  // Auto-scroll to the bottom when messages or current chatroom changes
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, currentChatroomId]);
 
   const handleSelectChatroom = (chatroomId) => {
     dispatch(setCurrentChatroom(chatroomId));
@@ -39,35 +53,55 @@ export default function Chat() {
   };
 
   const handleSendMessage = async () => {
-    if (!messageInput.trim() || !currentChatroomId) return;
+    const content = messageInput.trim();
+    if (!content || !currentChatroomId) return;
 
+    // Create a temporary ID and optimistic message
+    const tempId = `temp-${Date.now()}`;
     const tempMessage = {
-      _id: `temp-${Date.now()}`,
+      _id: tempId,
       sender_id: currentUser._id,
-      message: messageInput,
+      message: content,
       timestamp: new Date().toISOString(),
       sender_name: currentUser.name,
       sender_profile: currentUser.profile_picture,
+      isTemp: true,
     };
 
+    // Optimistically add the message
     dispatch(addOptimisticMessage({
       chatroomId: currentChatroomId,
-      message: tempMessage
+      message: tempMessage,
     }));
 
+    // Clear the input field
+    setMessageInput('');
+
     try {
-      await dispatch(sendMessage({ chatroomId: currentChatroomId, message: messageInput }));
-      setMessageInput('');
+      await dispatch(sendMessage({
+        chatroomId: currentChatroomId,
+        message: content,
+        tempId,
+      })).unwrap();
     } catch (error) {
+      // Remove the optimistic message if sending fails
+      dispatch(removeFailedMessage({
+        chatroomId: currentChatroomId,
+        messageId: tempId,
+      }));
       toast.error('Failed to send message');
     }
   };
 
-  const currentChatroom = chatrooms.find(c => c._id === currentChatroomId);
-  const otherParticipant = currentChatroom?.participants.find(p => p._id !== currentUser._id);
+  const currentChatroom = chatrooms.find((c) => c._id === currentChatroomId);
 
-  const filteredChatrooms = chatrooms.filter(chatroom => {
-    const user = chatroom.participants.find(p => p._id !== currentUser._id);
+  // --- Chat Header Fix ---
+  // To display the sender's info in the chat header, we always use the current user's details.
+  const headerUser = currentUser;
+
+  const filteredChatrooms = chatrooms.filter((chatroom) => {
+    // Filter by the conversation partner's name (for the sidebar list)
+    const user = chatroom.participants.find((p) => p._id !== currentUser._id);
     return user?.name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
@@ -92,14 +126,14 @@ export default function Chat() {
                 borderRadius: 20,
                 bgcolor: darkMode ? '#262626' : '#fafafa',
                 '& fieldset': { border: 'none' },
-              }
+              },
             }}
           />
         </Box>
 
         <List sx={{ overflowY: 'auto', height: 'calc(100vh - 120px)' }}>
           {filteredChatrooms.map((chatroom) => {
-            const user = chatroom.participants.find(p => p._id !== currentUser._id);
+            const user = chatroom.participants.find((p) => p._id !== currentUser._id);
             return (
               <ListItem
                 key={chatroom._id}
@@ -108,7 +142,7 @@ export default function Chat() {
                 onClick={() => handleSelectChatroom(chatroom._id)}
                 sx={{
                   '&:hover': { bgcolor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
-                  py: 1.5
+                  py: 1.5,
                 }}
               >
                 <ListItemAvatar>
@@ -126,13 +160,13 @@ export default function Chat() {
                   secondary={chatroom.last_message?.message}
                   primaryTypographyProps={{
                     fontWeight: 600,
-                    color: darkMode ? '#fff' : '#000'
+                    color: darkMode ? '#fff' : '#000',
                   }}
                   secondaryTypographyProps={{
                     color: darkMode ? '#a8a8a8' : '#737373',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
+                    whiteSpace: 'nowrap',
                   }}
                 />
               </ListItem>
@@ -145,27 +179,27 @@ export default function Chat() {
       <Box flex={1} display="flex" flexDirection="column">
         {currentChatroom ? (
           <>
+            {/* Chat Header: Displays the sender's (current user's) info */}
             <Box
               p={2}
               display="flex"
               alignItems="center"
-            
-                borderBottom={`1px solid ${darkMode ? '#363636' : '#dbdbdb'}`}
-
+              borderBottom={`1px solid ${darkMode ? '#363636' : '#dbdbdb'}`}
             >
-              <Avatar src={otherParticipant?.profile_picture} sx={{ width: 40, height: 40, mr: 2 }} />
+              <Avatar src={headerUser?.profile_picture} sx={{ width: 40, height: 40, mr: 2 }} />
               <Typography variant="h6" fontWeight={600} color={darkMode ? '#fff' : '#000'}>
-                {otherParticipant?.name}
+                {headerUser?.name || 'Unknown User'}
               </Typography>
             </Box>
 
+            {/* Chat Messages */}
             <Box flex={1} overflow="auto" p={2} bgcolor={darkMode ? 'rgba(0,0,0,0.3)' : '#fafafa'}>
               {loading ? (
                 <Box display="flex" justifyContent="center" mt={4}>
                   <CircularProgress size={24} />
                 </Box>
               ) : (
-                [...(messages[currentChatroomId] || [])].reverse().map((msg) => (
+                messages[currentChatroomId]?.map((msg) => (
                   <motion.div
                     key={msg._id}
                     initial={{ opacity: 0, y: 20 }}
@@ -173,7 +207,7 @@ export default function Chat() {
                     style={{
                       display: 'flex',
                       justifyContent: msg.sender_id === currentUser._id ? 'flex-end' : 'flex-start',
-                      marginBottom: 16
+                      marginBottom: 16,
                     }}
                   >
                     <Box
@@ -182,7 +216,7 @@ export default function Chat() {
                         alignItems: 'flex-end',
                         maxWidth: '70%',
                         gap: 1,
-                        flexDirection: msg.sender_id === currentUser._id ? 'row-reverse' : 'row'
+                        flexDirection: msg.sender_id === currentUser._id ? 'row-reverse' : 'row',
                       }}
                     >
                       {msg.sender_id !== currentUser._id && (
@@ -192,13 +226,20 @@ export default function Chat() {
                         sx={{
                           p: 1.5,
                           borderRadius: 18,
-                          bgcolor: msg.sender_id === currentUser._id
-                            ? darkMode ? '#0095f6' : '#3797f0'
-                            : darkMode ? '#262626' : '#ffffff',
-                          color: msg.sender_id === currentUser._id ? '#fff' : darkMode ? '#fff' : '#000',
-                          border: msg.sender_id !== currentUser._id
-                            ? `1px solid ${darkMode ? '#363636' : '#dbdbdb'}`
-                            : 'none'
+                          bgcolor:
+                            msg.sender_id === currentUser._id
+                              ? darkMode
+                                ? '#0095f6'
+                                : '#3797f0'
+                              : darkMode
+                              ? '#262626'
+                              : '#ffffff',
+                          color:
+                            msg.sender_id === currentUser._id ? '#fff' : darkMode ? '#fff' : '#000',
+                          border:
+                            msg.sender_id !== currentUser._id
+                              ? `1px solid ${darkMode ? '#363636' : '#dbdbdb'}`
+                              : 'none',
                         }}
                       >
                         <Typography variant="body2">{msg.message}</Typography>
@@ -211,7 +252,7 @@ export default function Chat() {
                         >
                           {new Date(msg.timestamp).toLocaleTimeString([], {
                             hour: '2-digit',
-                            minute: '2-digit'
+                            minute: '2-digit',
                           })}
                         </Typography>
                       </Box>
@@ -219,8 +260,10 @@ export default function Chat() {
                   </motion.div>
                 ))
               )}
+              <div ref={messagesEndRef} />
             </Box>
 
+            {/* Message Input */}
             <Box p={2} borderTop={`1px solid ${darkMode ? '#363636' : '#dbdbdb'}`}>
               <TextField
                 fullWidth
@@ -240,7 +283,7 @@ export default function Chat() {
                     borderRadius: 20,
                     bgcolor: darkMode ? '#262626' : '#fafafa',
                     '& fieldset': { border: 'none' },
-                  }
+                  },
                 }}
               />
             </Box>
