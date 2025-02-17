@@ -1,46 +1,72 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-const initialState = {
-  posts: [
-    {
-      id: 1,
-      username: 'mishi_262',
-      image: 'https://via.placeholder.com/300',
-      likes: 0,
-      liked: false,
-      comments: [],
-      showCommentInput: false,
-    },
-    // Add more sample posts if needed
-  ],
-};
+// Async thunk for creating a post
+export const createPost = createAsyncThunk(
+  "posts/createPost",
+  async (formData, { rejectWithValue }) => {
+    try {
+      // Simulate API call (Replace with actual API request)
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/posts`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to create post");
+      }
+
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
 
 const postSlice = createSlice({
-  name: 'post',
-  initialState,
+  name: "posts",
+  initialState: {
+    posts: [],
+    loading: false,
+    error: null,
+  },
   reducers: {
     toggleLikePost: (state, action) => {
-      const post = state.posts.find((p) => p.id === action.payload);
+      const post = state.posts.find((p) => p._id === action.payload);
       if (post) {
         post.liked = !post.liked;
-        post.likes = post.liked ? post.likes + 1 : post.likes - 1;
+      }
+    },
+    addCommentToPost: (state, action) => {
+      const { postId, comment } = action.payload;
+      const post = state.posts.find((p) => p._id === postId);
+      if (post) {
+        post.comments.push(comment);
       }
     },
     toggleCommentInput: (state, action) => {
-      const post = state.posts.find((p) => p.id === action.payload);
+      const post = state.posts.find((p) => p._id === action.payload);
       if (post) {
         post.showCommentInput = !post.showCommentInput;
       }
     },
-    addCommentToPost: (state, action) => {
-      const { postId, commentText } = action.payload;
-      const post = state.posts.find((p) => p.id === postId);
-      if (post) {
-        post.comments.push(commentText);
-      }
-    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(createPost.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createPost.fulfilled, (state, action) => {
+        state.loading = false;
+        state.posts.push(action.payload);
+      })
+      .addCase(createPost.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 
-export const { toggleLikePost, toggleCommentInput, addCommentToPost } = postSlice.actions;
+export const { toggleLikePost, addCommentToPost, toggleCommentInput } = postSlice.actions;
 export default postSlice.reducer;

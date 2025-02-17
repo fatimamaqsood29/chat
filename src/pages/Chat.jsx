@@ -27,7 +27,8 @@ import {
   addOptimisticMessage,
   removeFailedMessage,
 } from '../features/chatSlice';
-
+import ChatSearch from '../components/chat/ChatSearch';
+import ChatList from '../components/chat/ChatList';
 export default function Chat() {
   const dispatch = useDispatch();
   const { darkMode } = useThemeContext();
@@ -109,7 +110,9 @@ export default function Chat() {
     <Box minHeight="100vh" display="flex" bgcolor={darkMode ? 'background.default' : 'background.paper'}>
       {/* Chat List Sidebar */}
       <Box width={{ xs: '100%', sm: 350 }} borderRight={`1px solid ${darkMode ? '#363636' : '#dbdbdb'}`}>
-        <Box p={2} borderBottom={`1px solid ${darkMode ? '#363636' : '#dbdbdb'}`}>
+        <ChatSearch />
+        <ChatList filteredChatrooms={filteredChatrooms} currentUser={currentUser} currentChatroomId={currentChatroomId} handleSelectChatroom={handleSelectChatroom}/>
+        {/* <Box p={2} borderBottom={`1px solid ${darkMode ? '#363636' : '#dbdbdb'}`}>
           <TextField
             fullWidth
             size="small"
@@ -172,7 +175,7 @@ export default function Chat() {
               </ListItem>
             );
           })}
-        </List>
+        </List> */}
       </Box>
 
       {/* Chat Window */}

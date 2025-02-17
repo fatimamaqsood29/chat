@@ -7,47 +7,50 @@ import {
   TextField,
   Card,
 } from "@mui/material";
-import { AddPhotoAlternate, Movie, CloudUpload } from "@mui/icons-material";
+import { AddPhotoAlternate, CloudUpload } from "@mui/icons-material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { createPost } from "../features/postSlice";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useThemeContext } from "../ThemeContext";
 
 function CreateScreen() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { darkMode } = useThemeContext();
 
   const [selectedFile, setSelectedFile] = useState(null);
-  const [mediaType, setMediaType] = useState(null); // "image" or "video"
+  const [filePreview, setFilePreview] = useState("");
   const [caption, setCaption] = useState("");
 
-  const handleFileChange = (event, type) => {
+  const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
-      setSelectedFile(URL.createObjectURL(file));
-      setMediaType(type);
-      toast.success(`${type === "image" ? "Image" : "Video"} selected successfully!`);
+      setSelectedFile(file);
+      setFilePreview(URL.createObjectURL(file));
+      toast.success("Image selected successfully!");
     }
   };
 
-  const handleUpload = () => {
-    if (!selectedFile) {
-      toast.error("Please select a file before uploading.");
+  const handleUpload = async () => {
+    if (!selectedFile || !caption) {
+      toast.error("Please select an image and enter a caption.");
       return;
     }
 
-    navigate("/profile", {
-      state: {
-        newPost: {
-          type: mediaType,
-          url: selectedFile,
-          caption: caption,
-        },
-      },
-    });
+    const formData = new FormData();
+    formData.append("image", selectedFile);
+    formData.append("caption", caption);
 
-    toast.success("Post uploaded successfully!");
+    try {
+      await dispatch(createPost(formData)).unwrap();
+      toast.success("Post uploaded successfully!");
+      navigate("/profile");
+    } catch (error) {
+      toast.error("Failed to upload post.");
+    }
   };
 
   return (
@@ -79,7 +82,7 @@ function CreateScreen() {
           Create New Post
         </Typography>
 
-        {/* Media Selection */}
+        {/* Image Selection */}
         <Grid container spacing={2} justifyContent="center">
           <Grid item>
             <IconButton component="label">
@@ -90,72 +93,53 @@ function CreateScreen() {
                 type="file"
                 accept="image/*"
                 hidden
-                onChange={(event) => handleFileChange(event, "image")}
+                onChange={handleFileChange}
               />
             </IconButton>
             <Typography textAlign="center" mt={1}>
               Add Image
             </Typography>
           </Grid>
-          <Grid item>
-            <IconButton component="label">
-              <Movie sx={{ fontSize: 50, color: darkMode ? "#90caf9" : "#1976d2" }} />
-              <input
-                type="file"
-                accept="video/*"
-                hidden
-                onChange={(event) => handleFileChange(event, "video")}
-              />
-            </IconButton>
-            <Typography textAlign="center" mt={1}>
-              Add Video
-            </Typography>
-          </Grid>
         </Grid>
 
         {/* Preview Section */}
-        {selectedFile && (
+        {filePreview && (
           <Box mt={4}>
-            {mediaType === "image" ? (
-              <img
-                src={selectedFile}
-                alt="Selected"
-                style={{ width: "100%", maxHeight: 300, borderRadius: 8 }}
-              />
-            ) : (
-              <video
-                src={selectedFile}
-                controls
-                style={{ width: "100%", maxHeight: 300, borderRadius: 8 }}
-              />
-            )}
+            <img
+              src={filePreview}
+              alt="Selected"
+              style={{ width: "100%", borderRadius: 8 }}
+            />
           </Box>
         )}
 
         {/* Caption Input */}
         <TextField
-          label="Caption"
-          variant="outlined"
           fullWidth
           multiline
           rows={2}
+          variant="outlined"
+          placeholder="Write a caption..."
           value={caption}
-          onChange={(event) => setCaption(event.target.value)}
+          onChange={(e) => setCaption(e.target.value)}
           sx={{
-            mt: 3,
-            backgroundColor: darkMode ? "#303030" : "#ffffff",
-            color: darkMode ? "#ffffff" : "#000000",
+            mt: 2,
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: darkMode ? "#90caf9" : "#1976d2",
+              },
+            },
           }}
-          InputLabelProps={{ style: { color: darkMode ? "#ffffff" : "#000000" } }}
-          InputProps={{ style: { color: darkMode ? "#ffffff" : "#000000" } }}
         />
 
         {/* Upload Button */}
         <Button
           variant="contained"
+          color="primary"
+          fullWidth
           startIcon={<CloudUpload />}
+          sx={{ mt: 3 }}
           onClick={handleUpload}
-          sx={{ mt: 3, backgroundColor: darkMode ? "#90caf9" : "#1976d2" }}
         >
           Upload
         </Button>
