@@ -1,28 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useThemeContext } from '../../ThemeContext';
-
-import {
-  Box,
-  TextField,
-  IconButton,
-  Avatar,
-  Typography,
-  InputAdornment,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  CircularProgress,
-  Badge,
-} from '@mui/material';
+import { TextField, InputAdornment } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 
-function ChatSearch() {
-    const [searchQuery, setSearchQuery] = useState('');
-    const { darkMode } = useThemeContext();
-  
+export default function ChatSearch({ searchQuery, setSearchQuery, darkMode }) {
   return (
-    <Box p={2} borderBottom={`1px solid ${darkMode ? '#363636' : '#dbdbdb'}`}>
     <TextField
       fullWidth
       size="small"
@@ -42,8 +22,5 @@ function ChatSearch() {
         },
       }}
     />
-  </Box>
-  )
+  );
 }
-
-export default ChatSearch

@@ -10,7 +10,7 @@ import {
 import { AddPhotoAlternate, CloudUpload } from "@mui/icons-material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { createPost } from "../features/postSlice";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -20,6 +20,9 @@ function CreateScreen() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { darkMode } = useThemeContext();
+
+  // Get userId from Redux (or however you manage auth state)
+  const userId = useSelector((state) => state.auth.user.id);
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState("");
@@ -45,11 +48,17 @@ function CreateScreen() {
     formData.append("caption", caption);
 
     try {
-      await dispatch(createPost(formData)).unwrap();
-      toast.success("Post uploaded successfully!");
-      navigate("/profile");
+      const resultAction = await dispatch(createPost(formData));
+
+      if (createPost.fulfilled.match(resultAction)) {
+        toast.success("Post uploaded successfully!");
+        navigate(`/profile/${userId}`);
+      } else {
+        throw new Error(resultAction.payload || "Failed to upload post.");
+      }
     } catch (error) {
-      toast.error("Failed to upload post.");
+      console.error("Upload error:", error);
+      toast.error(error.message || "Failed to upload post.");
     }
   };
 
