@@ -5,13 +5,24 @@ export const createPost = createAsyncThunk(
   "posts/createPost",
   async (formData, { rejectWithValue }) => {
     try {
+      // Retrieve the token from localStorage
+      const token = localStorage.getItem("access_token"); // Ensure the key matches storage
+      console.log("Token from localStorage:", token); // Debugging
+
+      if (!token) {
+        throw new Error("Authentication token is missing.");
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts`,
         {
           method: "POST",
-          credentials: "include", // Include cookies for authentication
+          //credentials: "include",
+          withCredentials: "true",
           body: formData, // FormData will automatically set Content-Type
-          "Access-Control-Allow-Origin": "*"
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -21,7 +32,7 @@ export const createPost = createAsyncThunk(
         throw new Error(data.message || "Failed to create post");
       }
 
-      // Return the post data based on the Postman response structure
+      
       return {
         postId: data.post_id,
         imageUrl: data.image_url,
