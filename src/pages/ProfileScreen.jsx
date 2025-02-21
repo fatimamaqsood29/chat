@@ -16,6 +16,29 @@ function ProfileScreen() {
   const navigate = useNavigate();
   const { userId } = useParams();
   const location = useLocation();
+
+  // Get the logged-in user's ID from localStorage
+  const loggedInUserId = localStorage.getItem("user_id");
+
+  // Log for debugging
+  console.log("Logged-in User ID from localStorage:", loggedInUserId);
+  console.log("Profile User ID from URL:", userId);
+
+  // Redirect to login if user is not authenticated
+  useEffect(() => {
+    if (!loggedInUserId) {
+      toast.error("Please log in to view this profile.");
+      navigate("/login");
+    }
+  }, [loggedInUserId, navigate]);
+
+  // Determine if the profile being viewed is the logged-in user's profile
+  const isOwnProfile = loggedInUserId === userId;
+
+  // Log for debugging
+  console.log("Is Own Profile:", isOwnProfile);
+
+  // State variables
   const [selectedTab, setSelectedTab] = useState("post");
   const [profileData, setProfileData] = useState({
     name: localStorage.getItem("profile_name") || "John Doe",
@@ -29,6 +52,7 @@ function ProfileScreen() {
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogType, setDialogType] = useState("");
 
+  // Fetch profile data and posts
   useEffect(() => {
     if (location.state?.profileData) {
       const { name, bio, profileImage, followers, following } = location.state.profileData;
@@ -44,6 +68,7 @@ function ProfileScreen() {
     fetchUserPosts();
   }, [userId, location.key]);
 
+  // Fetch profile data from the API
   const fetchProfileData = async () => {
     try {
       const token = localStorage.getItem("access_token");
@@ -76,6 +101,7 @@ function ProfileScreen() {
     }
   };
 
+  // Fetch user posts from the API
   const fetchUserPosts = async () => {
     try {
       const response = await axios.get(
@@ -94,6 +120,7 @@ function ProfileScreen() {
     }
   };
 
+  // Fetch followers from the API
   const fetchFollowers = async () => {
     try {
       const token = localStorage.getItem("access_token");
@@ -110,6 +137,7 @@ function ProfileScreen() {
     }
   };
 
+  // Fetch following from the API
   const fetchFollowing = async () => {
     try {
       const token = localStorage.getItem("access_token");
@@ -126,6 +154,7 @@ function ProfileScreen() {
     }
   };
 
+  // Handle opening the followers/following dialog
   const handleOpenDialog = async (type) => {
     if (type === "followers") await fetchFollowers();
     if (type === "following") await fetchFollowing();
@@ -133,6 +162,7 @@ function ProfileScreen() {
     setOpenDialog(true);
   };
 
+  // Handle closing the dialog
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setDialogType("");
@@ -141,7 +171,7 @@ function ProfileScreen() {
   return (
     <Box sx={{ p: 4 }}>
       <ToastContainer />
-      <ProfileHeader profileData={profileData} userId={userId} />
+      <ProfileHeader profileData={profileData} userId={userId} isOwnProfile={isOwnProfile} />
       <ProfileStats
         totalPosts={totalPosts}
         followersCount={profileFollowers.length}

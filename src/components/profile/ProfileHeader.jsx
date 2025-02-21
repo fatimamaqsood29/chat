@@ -1,7 +1,7 @@
 import { Avatar, Box, Button, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-export const ProfileHeader = ({ profileData, userId }) => {
+export const ProfileHeader = ({ profileData, userId, isOwnProfile }) => {
   const navigate = useNavigate();
   
   return (
@@ -19,12 +19,18 @@ export const ProfileHeader = ({ profileData, userId }) => {
           <Typography variant="body1">{profileData.bio}</Typography>
         </Box>
       </Box>
-      <Button
-        variant="outlined"
-        onClick={() => navigate("/edit-profile", { state: { profileData, userId } })}
-      >
-        Edit Profile
-      </Button>
+      {isOwnProfile ? (
+        <Button
+          variant="outlined"
+          onClick={() => navigate("/edit-profile", { state: { profileData, userId } })}
+        >
+          Edit Profile
+        </Button>
+      ) : (
+        <Button variant="contained" color="primary">
+          Follow
+        </Button>
+      )}
     </Box>
   );
 };
