@@ -32,7 +32,8 @@ export const createPost = createAsyncThunk(
         throw new Error(data.message || "Failed to create post");
       }
 
-      
+      console.log("Post created successfully with ID:", data.post_id); // Log postId
+
       return {
         postId: data.post_id,
         imageUrl: data.image_url,

@@ -1,9 +1,63 @@
 import { Avatar, Box, Button, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { useState, useEffect } from "react";
+
 
 export const ProfileHeader = ({ profileData, userId, isOwnProfile }) => {
   const navigate = useNavigate();
-  
+  const [isFollowing, setIsFollowing] = useState(false); // State to track follow status
+
+  // Check if the logged-in user is already following this profile
+  useEffect(() => {
+    const checkFollowStatus = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/api/users/is-following/${userId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setIsFollowing(response.data.isFollowing);
+      } catch (error) {
+        console.error("Error checking follow status:", error);
+      }
+    };
+
+    if (!isOwnProfile) {
+      checkFollowStatus();
+    }
+  }, [userId, isOwnProfile]);
+
+  // Handle follow/unfollow action
+  const handleFollow = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("Please log in to follow this user.");
+        navigate("/login");
+        return;
+      }
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/users/follow/${userId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.message === "Successfully followed user") {
+        setIsFollowing(true); // Update follow status
+        toast.success("You are now following this user.");
+      } else if (response.data.message === "Successfully unfollowed user") {
+        setIsFollowing(false); // Update follow status
+        toast.success("You have unfollowed this user.");
+      }
+    } catch (error) {
+      console.error("Error following/unfollowing user:", error);
+      toast.error("Failed to follow/unfollow user. Please try again.");
+    }
+  };
+
   return (
     <Box display="flex" alignItems="center" justifyContent="space-between">
       <Box display="flex" alignItems="center" gap={3}>
@@ -27,8 +81,12 @@ export const ProfileHeader = ({ profileData, userId, isOwnProfile }) => {
           Edit Profile
         </Button>
       ) : (
-        <Button variant="contained" color="primary">
-          Follow
+        <Button
+          variant="contained"
+          color={isFollowing ? "secondary" : "primary"}
+          onClick={handleFollow}
+        >
+          {isFollowing ? "Unfollow" : "Follow"}
         </Button>
       )}
     </Box>

@@ -51,6 +51,9 @@ function CreateScreen() {
       const resultAction = await dispatch(createPost(formData));
 
       if (createPost.fulfilled.match(resultAction)) {
+        const postId = resultAction.payload.postId;
+        console.log("Post created successfully with ID:", postId); // Log postId
+
         toast.success("Post uploaded successfully!");
         navigate(`/profile/${userId}`);
       } else {
