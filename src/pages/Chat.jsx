@@ -10,6 +10,7 @@ import {
   setCurrentChatroom,
   addOptimisticMessage,
   removeFailedMessage,
+  createChatroom,
 } from '../features/chatSlice';
 import ChatSearch from '../components/chat/ChatSearch';
 import ChatList from '../components/chat/ChatList';
@@ -35,15 +36,32 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, currentChatroomId]);
 
+  // Handle selecting a chatroom
   const handleSelectChatroom = (chatroomId) => {
     dispatch(setCurrentChatroom(chatroomId));
     dispatch(fetchMessages(chatroomId));
   };
 
+  // Handle creating a new chatroom
+  const handleCreateChatroom = async (participantId) => {
+    try {
+      const result = await dispatch(createChatroom(participantId)).unwrap();
+      if (result.chatroom_id) {
+        toast.success('Chatroom created successfully');
+        dispatch(setCurrentChatroom(result.chatroom_id));
+        dispatch(fetchMessages(result.chatroom_id));
+      } else {
+        toast.error(result.message || 'Failed to create chatroom');
+      }
+    } catch (error) {
+      toast.error('Failed to create chatroom');
+    }
+  };
+
+  // Handle sending a message
   const handleSendMessage = async (content, setMessageInput) => {
     if (!content.trim() || !currentChatroomId) return;
 
-    // Create a temporary ID and optimistic message
     const tempId = `temp-${Date.now()}`;
     const tempMessage = {
       _id: tempId,
@@ -55,13 +73,11 @@ export default function Chat() {
       isTemp: true,
     };
 
-    // Optimistically add the message
     dispatch(addOptimisticMessage({
       chatroomId: currentChatroomId,
       message: tempMessage,
     }));
 
-    // Clear the input field
     setMessageInput('');
 
     try {
@@ -71,7 +87,6 @@ export default function Chat() {
         tempId,
       })).unwrap();
     } catch (error) {
-      // Remove the optimistic message if sending fails
       dispatch(removeFailedMessage({
         chatroomId: currentChatroomId,
         messageId: tempId,
@@ -80,7 +95,7 @@ export default function Chat() {
     }
   };
 
-  // Find the current chatroom and the recipient
+  // Find the current chatroom and recipient
   const currentChatroom = chatrooms.find((c) => c._id === currentChatroomId);
   const recipient = currentChatroom?.participants.find((p) => p._id !== currentUser._id);
 
@@ -106,6 +121,7 @@ export default function Chat() {
           currentUser={currentUser}
           currentChatroomId={currentChatroomId}
           handleSelectChatroom={handleSelectChatroom}
+          handleCreateChatroom={handleCreateChatroom} // Pass the create chatroom function
           darkMode={darkMode}
         />
       </Box>
@@ -114,10 +130,7 @@ export default function Chat() {
       <Box flex={1} display="flex" flexDirection="column">
         {currentChatroom ? (
           <>
-            {/* Chat Header: Displays the recipient's info */}
             <ChatHeader headerUser={recipient} darkMode={darkMode} />
-
-            {/* Chat Messages */}
             <ChatMessages
               messages={messages}
               currentUser={currentUser}
@@ -126,8 +139,6 @@ export default function Chat() {
               messagesEndRef={messagesEndRef}
               currentChatroomId={currentChatroomId}
             />
-
-            {/* Message Input */}
             <MessageInput 
               handleSendMessage={handleSendMessage} 
               darkMode={darkMode} 
