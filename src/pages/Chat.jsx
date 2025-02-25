@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useThemeContext } from '../ThemeContext';
 import { toast } from 'react-hot-toast';
@@ -36,10 +36,14 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, currentChatroomId]);
 
-  // Handle selecting a chatroom
-  const handleSelectChatroom = (chatroomId) => {
-    dispatch(setCurrentChatroom(chatroomId));
-    dispatch(fetchMessages(chatroomId));
+  // Handle selecting a chatroom with error handling for fetchMessages
+  const handleSelectChatroom = async (chatroomId) => {
+    try {
+      dispatch(setCurrentChatroom(chatroomId));
+      await dispatch(fetchMessages(chatroomId)).unwrap();
+    } catch (error) {
+      toast.error('Failed to load messages');
+    }
   };
 
   // Handle creating a new chatroom
@@ -49,7 +53,6 @@ export default function Chat() {
       if (result.chatroom_id) {
         toast.success('Chatroom created successfully');
         dispatch(setCurrentChatroom(result.chatroom_id));
-        dispatch(fetchMessages(result.chatroom_id));
       } else {
         toast.error(result.message || 'Failed to create chatroom');
       }
@@ -58,14 +61,14 @@ export default function Chat() {
     }
   };
 
-  // Handle sending a message
+  // Handle sending a message with optimistic UI updates
   const handleSendMessage = async (content, setMessageInput) => {
     if (!content.trim() || !currentChatroomId) return;
 
     const tempId = `temp-${Date.now()}`;
     const tempMessage = {
       _id: tempId,
-      sender_id: currentUser._id,
+      sender_id: currentUser.id,
       message: content,
       timestamp: new Date().toISOString(),
       sender_name: currentUser.name,
@@ -73,6 +76,7 @@ export default function Chat() {
       isTemp: true,
     };
 
+    // Optimistically add the message
     dispatch(addOptimisticMessage({
       chatroomId: currentChatroomId,
       message: tempMessage,
@@ -97,13 +101,17 @@ export default function Chat() {
 
   // Find the current chatroom and recipient
   const currentChatroom = chatrooms.find((c) => c._id === currentChatroomId);
-  const recipient = currentChatroom?.participants.find((p) => p._id !== currentUser._id);
+  const recipient = currentChatroom?.participants.find((p) => p._id !== currentUser.id);
 
-  // Filter chatrooms based on search query
-  const filteredChatrooms = chatrooms.filter((chatroom) => {
-    const user = chatroom.participants.find((p) => p._id !== currentUser._id);
-    return user?.name.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  // Memoized filtering of chatrooms to optimize performance
+  const filteredChatrooms = useMemo(() => {
+    return chatrooms.filter((chatroom) => {
+      const user = chatroom.participants.find((p) => p._id !== currentUser.id);
+      console.log(JSON.stringify(currentUser), 'json');
+      
+      return user?.name.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+  }, [chatrooms, searchQuery, currentUser.id]);
 
   return (
     <Box minHeight="100vh" display="flex" bgcolor={darkMode ? 'background.default' : 'background.paper'}>
@@ -116,12 +124,13 @@ export default function Chat() {
             darkMode={darkMode} 
           />
         </Box>
+        
         <ChatList
           filteredChatrooms={filteredChatrooms}
           currentUser={currentUser}
           currentChatroomId={currentChatroomId}
           handleSelectChatroom={handleSelectChatroom}
-          handleCreateChatroom={handleCreateChatroom} // Pass the create chatroom function
+          handleCreateChatroom={handleCreateChatroom}
           darkMode={darkMode}
         />
       </Box>

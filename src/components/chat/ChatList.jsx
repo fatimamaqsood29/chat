@@ -5,16 +5,22 @@ export default function ChatList({
   currentUser, 
   currentChatroomId, 
   handleSelectChatroom, 
-  darkMode 
+  darkMode = false,
+  handleCreateChatroom
 }) {
+  if (!Array.isArray(filteredChatrooms)) {
+    return null;
+  }
+
   return (
     <List sx={{ overflowY: 'auto', height: 'calc(100vh - 120px)' }}>
       {filteredChatrooms.map((chatroom) => {
-        const user = chatroom.participants.find((p) => p._id !== currentUser._id);
+        const user = chatroom.participants.find((p) => p._id !== currentUser.id);
+
         return (
           <ListItem
             key={chatroom._id}
-            button
+
             selected={chatroom._id === currentChatroomId}
             onClick={() => handleSelectChatroom(chatroom._id)}
             sx={{
@@ -29,12 +35,15 @@ export default function ChatList({
                 invisible={!chatroom.unread_count}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
               >
-                <Avatar src={user?.profile_picture} sx={{ width: 56, height: 56 }} />
+                <Avatar 
+                  src={user?.profile_picture || '/path/to/default-avatar.jpg'}
+                  sx={{ width: 56, height: 56 }} 
+                />
               </Badge>
             </ListItemAvatar>
             <ListItemText
-              primary={user?.name}
-              secondary={chatroom.last_message?.message}
+              primary={user?.name || 'Unknown User'}
+              secondary={chatroom.last_message?.message || 'No message'}
               primaryTypographyProps={{
                 fontWeight: 600,
                 color: darkMode ? '#fff' : '#000',

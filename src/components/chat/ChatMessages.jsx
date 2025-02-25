@@ -24,7 +24,7 @@ export default function ChatMessages({
             animate={{ opacity: 1, y: 0 }}
             style={{
               display: 'flex',
-              justifyContent: msg.sender_id === currentUser._id ? 'flex-end' : 'flex-start',
+              justifyContent: msg.sender_id === currentUser.id ? 'flex-end' : 'flex-start',
               marginBottom: 16,
             }}
           >
