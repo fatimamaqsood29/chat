@@ -1,174 +1,55 @@
-import React, { useEffect } from 'react';
-import { useThemeContext } from '../ThemeContext';
-import { useDispatch, useSelector } from 'react-redux';
-import { toggleLikePost, toggleCommentInput, addCommentToPost } from '../features/postSlice';
-import { followUser, unfollowUser, fetchSuggestions } from '../features/followSlice';
-import { fetchPosts, likePost, addComment } from '../features/postSlice';
-
-const stories = [
-  { id: 1, username: 'mishi_262', img: 'https://via.placeholder.com/50' },
-  { id: 2, username: 'zoha_afzal', img: 'https://via.placeholder.com/50' },
-  { id: 3, username: 'aesthetic_girl', img: 'https://via.placeholder.com/50' },
-];
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchPosts } from "../features/postSlice";
+import { useThemeContext } from "../ThemeContext";
+import Post from "../components/home/Post";
 
 const Home = () => {
   const { darkMode } = useThemeContext();
   const dispatch = useDispatch();
-
   const posts = useSelector((state) => state.post.posts);
-  const followingRedux = useSelector((state) => state.follow.following);
-  const suggestions = useSelector((state) => state.follow.suggestions || []);
 
   useEffect(() => {
-    dispatch(fetchPosts()).then((response) => {
-      console.log("Posts fetched:", response.payload); // Debugging
-    });
-    dispatch(fetchSuggestions());
+    dispatch(fetchPosts());
   }, [dispatch]);
 
-  const handleLikeToggle = (postId) => {
-    dispatch(likePost(postId));
-  };
-
-  const handleCommentToggle = (postId) => {
-    dispatch(toggleCommentInput(postId));
-  };
-
-  const handleAddComment = (postId, commentText) => {
-    if (!commentText.trim()) return;
-    dispatch(addComment({ postId, commentText }));
-  };
-
-  const handleFollowToggle = (userId, isFollowing) => {
-    if (!userId) {
-      console.error('Invalid userId:', userId);
-      return;
-    }
-    if (isFollowing) {
-      dispatch(unfollowUser(userId));
-    } else {
-      dispatch(followUser(userId));
-    }
-  };
-
   return (
-    <div className={`${darkMode ? 'bg-black text-white' : 'bg-white text-black'} min-h-screen`}>
-      <div className="flex justify-center mt-4">
-        <div className="w-full max-w-4xl flex gap-4">
-          {/* Left Section: Stories & Feed */}
-          <div className="w-2/3">
-            {/* Stories */}
-            <div className={`p-4 rounded-md shadow-md flex space-x-4 overflow-x-auto ${darkMode ? 'bg-black' : 'bg-white'}`}>
-              {stories.map((story) => (
-                <div key={story.id} className="flex flex-col items-center">
-                  <img
-                    src={story.img}
-                    alt={story.username}
-                    className="w-12 h-12 rounded-full border-2 border-red-500"
-                  />
-                  <p className="text-xs">{story.username}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Feed */}
-            <div className="mt-4 space-y-4">
-              {posts.map((post) => {
-                console.log("Post image URL:", post.image_url); // Debugging
-                return (
-                  <div key={post._id} className={`p-4 rounded-md shadow-md ${darkMode ? 'bg-black' : 'bg-white'}`}>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
-                      <p className="font-bold">{post.username}</p>
-                    </div>
+    <div className={`${darkMode ? "bg-black" : "bg-white"} min-h-screen`}>
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        {/* Stories */}
+        <div
+          className={`${
+            darkMode ? "bg-neutral-900" : "bg-white"
+          } border ${
+            darkMode ? "border-neutral-800" : "border-gray-200"
+          } rounded-lg p-4 mb-6`}
+        >
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className="flex flex-col items-center flex-shrink-0"
+              >
+                <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-400 to-pink-600 p-0.5">
+                  <div className="bg-white rounded-full p-0.5">
                     <img
-                      src={post.image_url} // Use image_url instead of image
-                      alt="Post"
-                      className="w-full mt-2 rounded-md"
+                      src={`https://i.pravatar.cc/100?img=${i + 1}`}
+                      alt="Story"
+                      className="w-full h-full rounded-full"
                     />
-                    <div className="flex items-center mt-2">
-                      {/* Like Section */}
-                      <div className="flex flex-col items-center mr-2">
-                        <button onClick={() => handleLikeToggle(post._id)} className="text-red-500 text-lg">
-                          {post.liked ? '❤️' : '🤍'}
-                        </button>
-                        <p className="text-sm mt-1">{post.likes.length} Likes</p>
-                      </div>
-
-                      {/* Comment Section */}
-                      <div className="flex flex-col items-center">
-                        <button onClick={() => handleCommentToggle(post._id)} className="text-blue-500 text-lg">
-                          💬
-                        </button>
-                        <p className="text-sm mt-1">{post.comments.length} Comments</p>
-                      </div>
-                    </div>
-
-                    {/* Display Comments */}
-                    <div className="mt-2">
-                      {post.comments.map((comment, index) => (
-                        <p key={index} className="text-sm text-gray-700">
-                          <b>User:</b> {comment}
-                        </p>
-                      ))}
-                    </div>
-
-                    {/* Comment Input */}
-                    {post.showCommentInput && (
-                      <div className="mt-2 flex">
-                        <input
-                          type="text"
-                          placeholder="Add a comment..."
-                          className={`w-full border rounded-md p-2 text-sm ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              handleAddComment(post._id, e.target.value);
-                              e.target.value = '';
-                            }
-                          }}
-                        />
-                        <button className="ml-2 bg-blue-500 text-white px-4 py-1 rounded-md text-sm">Post</button>
-                      </div>
-                    )}
                   </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Right Section: Follow Suggestions */}
-          <div className="w-1/3">
-            <div className={`p-4 rounded-md shadow-md ${darkMode ? 'bg-black' : 'bg-white'}`}>
-              <h2 className="text-lg font-bold mb-2">Suggestions</h2>
-              <div className="space-y-4">
-                {suggestions.length > 0 ? (
-                  suggestions.map((user) => {
-                    const isFollowing = followingRedux.some((u) => u.id === user.id);
-                    return (
-                      <div key={user.id} className={`flex items-center justify-between p-2 rounded-md ${darkMode ? 'bg-black' : 'bg-white'}`}>
-                        <div className="flex items-center space-x-4">
-                          <img
-                            src={user.img || 'https://via.placeholder.com/50'}
-                            alt={user.username}
-                            className="w-10 h-10 rounded-full"
-                          />
-                          <p className="text-sm">{user.username}</p>
-                        </div>
-                        <button
-                          onClick={() => handleFollowToggle(user.id, isFollowing)}
-                          className={`px-4 py-1 rounded-md text-xs ${isFollowing ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'}`}
-                        >
-                          {isFollowing ? 'Following' : 'Follow'}
-                        </button>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <p className="text-sm">No suggestions available</p>
-                )}
+                </div>
+                <span className="text-xs mt-1">user_{i + 1}</span>
               </div>
-            </div>
+            ))}
           </div>
+        </div>
+
+        {/* Posts */}
+        <div className="space-y-6">
+          {posts.map((post) => (
+            <Post key={post._id} post={post} darkMode={darkMode} />
+          ))}
         </div>
       </div>
     </div>
