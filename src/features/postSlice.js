@@ -5,10 +5,7 @@ export const createPost = createAsyncThunk(
   "posts/createPost",
   async (formData, { rejectWithValue }) => {
     try {
-      // Retrieve the token from localStorage
-      const token = localStorage.getItem("access_token"); // Ensure the key matches storage
-      console.log("Token from localStorage:", token); // Debugging
-
+      const token = localStorage.getItem("access_token");
       if (!token) {
         throw new Error("Authentication token is missing.");
       }
@@ -17,9 +14,7 @@ export const createPost = createAsyncThunk(
         `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts`,
         {
           method: "POST",
-          //credentials: "include",
-          withCredentials: "true",
-          body: formData, // FormData will automatically set Content-Type
+          body: formData,
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -32,14 +27,112 @@ export const createPost = createAsyncThunk(
         throw new Error(data.message || "Failed to create post");
       }
 
-      console.log("Post created successfully with ID:", data.post_id); // Log postId
-
       return {
         postId: data.post_id,
         imageUrl: data.image_url,
-        caption: formData.get("caption"), // Include caption from formData
-        notification: data.notification, // Include notification data
+        caption: formData.get("caption"),
       };
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Async thunk for fetching posts
+export const fetchPosts = createAsyncThunk(
+  "posts/fetchPosts",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        throw new Error("Authentication token is missing.");
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch posts");
+      }
+
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Async thunk for liking a post
+export const likePost = createAsyncThunk(
+  "posts/likePost",
+  async (postId, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        throw new Error("Authentication token is missing.");
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts/${postId}/like`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to like post");
+      }
+
+      return { postId, likes: data.likes };
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Async thunk for adding a comment
+export const addComment = createAsyncThunk(
+  "posts/addComment",
+  async ({ postId, commentText }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        throw new Error("Authentication token is missing.");
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts/${postId}/comment`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ comment_text: commentText }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to add comment");
+      }
+
+      return { postId, comment: data.comment };
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -82,7 +175,6 @@ const postSlice = createSlice({
       })
       .addCase(createPost.fulfilled, (state, action) => {
         state.loading = false;
-        // Add the new post to the beginning of the posts array
         state.posts.unshift({
           postId: action.payload.postId,
           imageUrl: action.payload.imageUrl,
@@ -95,7 +187,30 @@ const postSlice = createSlice({
       .addCase(createPost.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        console.error("Post creation error:", action.payload);
+      })
+      .addCase(fetchPosts.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPosts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.posts = action.payload;
+      })
+      .addCase(fetchPosts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(likePost.fulfilled, (state, action) => {
+        const post = state.posts.find((p) => p.postId === action.payload.postId);
+        if (post) {
+          post.likes = action.payload.likes;
+        }
+      })
+      .addCase(addComment.fulfilled, (state, action) => {
+        const post = state.posts.find((p) => p.postId === action.payload.postId);
+        if (post) {
+          post.comments.push(action.payload.comment);
+        }
       });
   },
 });
