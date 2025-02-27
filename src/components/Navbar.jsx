@@ -16,15 +16,18 @@ import {
   FaPlus,
   FaExchangeAlt,
 } from "react-icons/fa";
-import { useSelector } from "react-redux";
-
+//import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useThemeContext } from "../ThemeContext";
 import { logout } from "../features/authSlice"; // Import logout action
 
 export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
+  const dispatch = useDispatch();
+
   const { darkMode, toggleTheme } = useThemeContext();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
-  const { user } = useSelector((state) => state.auth); // Access user info from Redux
+  const { user } = useSelector((state) => state.auth); 
+  // Access user info from Redux
 
   return (
     <>
