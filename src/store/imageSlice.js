@@ -8,13 +8,38 @@ const initialState = {
 
 export const fetchTrendingImages = createAsyncThunk(
   'images/fetchTrendingImages',
-  async () => {
-    // Replace mock data with API call
-    const mockImages = [
-      { id: 1, title: 'Trending Image 1', url: 'image1.jpg', likes: 120, comments: 30 },
-      { id: 2, title: 'Trending Image 2', url: 'image2.jpg', likes: 200, comments: 50 },
-    ];
-    return mockImages;
+  async (_, { rejectWithValue }) => {
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/posts/trending`;
+    const token = localStorage.getItem('access_token'); // 🔹 Get token from local storage
+
+    if (!token) {
+      console.error("No token found in local storage.");
+      return rejectWithValue("Authentication token is missing.");
+    }
+
+    try {
+      console.log("Fetching from:", apiUrl); // ✅ Logs the API URL
+      console.log("Using token:", token); // ✅ Logs the token (remove in production)
+
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`, // 🔹 Pass token in the header
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log("Fetched data:", data); // ✅ Logs response data
+      return data;
+    } catch (error) {
+      console.error("Fetch error:", error.message); // ✅ Logs error message
+      return rejectWithValue(error.message);
+    }
   }
 );
 
@@ -34,7 +59,7 @@ const imageSlice = createSlice({
       })
       .addCase(fetchTrendingImages.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.payload;
       });
   },
 });
