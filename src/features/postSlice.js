@@ -88,8 +88,9 @@ export const addComment = createAsyncThunk(
     try {
       const token = localStorage.getItem("access_token");
       if (!token) throw new Error("Authentication token is missing.");
+
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts/${postId}/comment`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts/${postId}/comment`, // Matches backend route
         {
           method: "POST",
           headers: {
@@ -99,6 +100,7 @@ export const addComment = createAsyncThunk(
           body: JSON.stringify({ comment_text: commentText }),
         }
       );
+
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Failed to add comment");
       return { postId, comment: data.comment };
@@ -112,11 +114,27 @@ export const addComment = createAsyncThunk(
 export const addReply = createAsyncThunk(
   "posts/addReply",
   async ({ postId, commentId, replyText }, { rejectWithValue }) => {
+    // Debugging: Log parameters to ensure they are correct
+    console.log("addReply Params:", { postId, commentId, replyText });
+
+    // Debugger statement to pause execution
+    debugger;
+
     try {
+      // Check if required parameters are present
+      if (!postId || !commentId || !replyText) {
+        throw new Error("Missing required parameters (postId, commentId, or replyText).");
+      }
+
+      // Retrieve the authentication token from localStorage
       const token = localStorage.getItem("access_token");
-      if (!token) throw new Error("Authentication token is missing.");
+      if (!token) {
+        throw new Error("Authentication token is missing.");
+      }
+
+      // Make the API request to add a reply
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts/${postId}/comments/${commentId}/replies`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts/${postId}/comments/${commentId}/reply`,
         {
           method: "POST",
           headers: {
@@ -126,16 +144,23 @@ export const addReply = createAsyncThunk(
           body: JSON.stringify({ reply_text: replyText }),
         }
       );
-      console.log(`/api/posts/posts/${postId}/comments/${commentId}/replies`);
+
+      // Parse the response
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to add reply");
+
+      // Check if the response is not OK (e.g., 4xx or 5xx status)
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to add reply.");
+      }
+
+      // Return the response data for the Redux store
       return { postId, commentId, reply: data.reply };
     } catch (error) {
+      // Handle errors and return them with rejectWithValue
       return rejectWithValue(error.message);
     }
   }
 );
-
 // Update Reply
 export const updateReply = createAsyncThunk(
   "posts/updateReply",
