@@ -17,11 +17,11 @@ function ProfileScreen() {
   const { userId } = useParams();
   const location = useLocation();
 
-  // Get the logged-in user's ID and token from localStorage
+  // Retrieve logged-in user's id and token from localStorage
   const loggedInUserId = localStorage.getItem("user_id");
   const token = localStorage.getItem("access_token");
 
-  // Redirect to login if user is not authenticated
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (!loggedInUserId || !token) {
       toast.error("Please log in to view this profile.");
@@ -29,7 +29,7 @@ function ProfileScreen() {
     }
   }, [loggedInUserId, token, navigate]);
 
-  // Determine if the profile being viewed is the logged-in user's profile
+  // Determine if the profile being viewed is the logged-in user's own profile
   const isOwnProfile = loggedInUserId === userId;
 
   // State variables
@@ -41,12 +41,12 @@ function ProfileScreen() {
   });
   const [profileFollowers, setProfileFollowers] = useState([]);
   const [profileFollowing, setProfileFollowing] = useState([]);
-  const [uploadedImages, setUploadedImages] = useState([]); // State for posts
+  const [uploadedImages, setUploadedImages] = useState([]);
   const [totalPosts, setTotalPosts] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogType, setDialogType] = useState("");
 
-  // Fetch profile data and posts
+  // Fetch profile data and posts on component mount or when userId changes
   useEffect(() => {
     if (location.state?.profileData) {
       const { name, bio, profileImage, followers, following } = location.state.profileData;
@@ -60,9 +60,10 @@ function ProfileScreen() {
       fetchProfileData();
     }
     fetchUserPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, location.key]);
 
-  // Fetch profile data from the API
+  // Fetch profile details from the API
   const fetchProfileData = async () => {
     try {
       if (!token) {
@@ -94,7 +95,7 @@ function ProfileScreen() {
     }
   };
 
-  // Fetch user posts from the API
+  // Fetch posts from the API
   const fetchUserPosts = async () => {
     try {
       const response = await axios.get(
@@ -102,7 +103,7 @@ function ProfileScreen() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (Array.isArray(response.data)) {
-        setUploadedImages(response.data); // Update the state with fetched posts
+        setUploadedImages(response.data);
         setTotalPosts(response.data.length);
       } else {
         setUploadedImages([]);
@@ -114,7 +115,55 @@ function ProfileScreen() {
     }
   };
 
-  // Render the profile screen
+  // Handlers for opening the followers/following dialog
+  const handleOpenDialog = async (type) => {
+    if (type === "followers") {
+      await fetchFollowers();
+    }
+    if (type === "following") {
+      await fetchFollowing();
+    }
+    setDialogType(type);
+    setOpenDialog(true);
+  };
+
+  // Fetch followers list from the API
+  const fetchFollowers = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/users/followers`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (Array.isArray(response.data)) {
+        setProfileFollowers(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching followers:", error);
+      toast.error("Failed to load followers. Please try again.");
+    }
+  };
+
+  // Fetch following list from the API
+  const fetchFollowing = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/users/following`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (Array.isArray(response.data)) {
+        setProfileFollowing(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching following:", error);
+      toast.error("Failed to load following. Please try again.");
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setDialogType("");
+  };
+
   return (
     <Box sx={{ p: 4 }}>
       <ToastContainer />
@@ -123,7 +172,7 @@ function ProfileScreen() {
         totalPosts={totalPosts}
         followersCount={profileFollowers.length}
         followingCount={profileFollowing.length}
-        onStatClick={(type) => setDialogType(type)}
+        onStatClick={handleOpenDialog}
       />
       <TabsSection
         selectedTab={selectedTab}
@@ -134,13 +183,13 @@ function ProfileScreen() {
           uploadedImages={uploadedImages} 
           fetchPosts={fetchUserPosts} 
           token={token} 
-          setUploadedImages={setUploadedImages} // Pass setUploadedImages as a prop
+          setUploadedImages={setUploadedImages}
         />
       )}
       <FollowDialog
         open={openDialog}
         type={dialogType}
-        onClose={() => setOpenDialog(false)}
+        onClose={handleCloseDialog}
         followers={profileFollowers}
         following={profileFollowing}
       />

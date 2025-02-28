@@ -4,12 +4,11 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useState, useEffect } from "react";
 
-
 export const ProfileHeader = ({ profileData, userId, isOwnProfile }) => {
   const navigate = useNavigate();
-  const [isFollowing, setIsFollowing] = useState(false); // State to track follow status
+  const [isFollowing, setIsFollowing] = useState(false);
 
-  // Check if the logged-in user is already following this profile
+  // Check the follow status only if viewing someone else's profile
   useEffect(() => {
     const checkFollowStatus = async () => {
       try {
@@ -46,10 +45,10 @@ export const ProfileHeader = ({ profileData, userId, isOwnProfile }) => {
       );
 
       if (response.data.message === "Successfully followed user") {
-        setIsFollowing(true); // Update follow status
+        setIsFollowing(true);
         toast.success("You are now following this user.");
       } else if (response.data.message === "Successfully unfollowed user") {
-        setIsFollowing(false); // Update follow status
+        setIsFollowing(false);
         toast.success("You have unfollowed this user.");
       }
     } catch (error) {
@@ -76,7 +75,9 @@ export const ProfileHeader = ({ profileData, userId, isOwnProfile }) => {
       {isOwnProfile ? (
         <Button
           variant="outlined"
-          onClick={() => navigate("/edit-profile", { state: { profileData, userId } })}
+          onClick={() =>
+            navigate("/edit-profile", { state: { profileData, userId } })
+          }
         >
           Edit Profile
         </Button>
