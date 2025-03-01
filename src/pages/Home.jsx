@@ -16,40 +16,90 @@ const Home = () => {
   return (
     <div className={`${darkMode ? "bg-black" : "bg-white"} min-h-screen`}>
       <div className="max-w-5xl mx-auto px-4 py-8">
-        {/* Stories */}
-        <div
-          className={`${
-            darkMode ? "bg-neutral-900" : "bg-white"
-          } border ${
-            darkMode ? "border-neutral-800" : "border-gray-200"
-          } rounded-lg p-4 mb-6`}
-        >
-          <div className="flex gap-4 overflow-x-auto pb-2">
-            {[...Array(8)].map((_, i) => (
-              <div
-                key={i}
-                className="flex flex-col items-center flex-shrink-0"
-              >
-                <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-400 to-pink-600 p-0.5">
-                  <div className="bg-white rounded-full p-0.5">
-                    <img
-                      src={`https://i.pravatar.cc/100?img=${i + 1}`}
-                      alt="Story"
-                      className="w-full h-full rounded-full"
-                    />
+        {/* Layout: Feed and Suggestions */}
+        <div className="flex gap-4">
+          {/* Feed (Stories + Posts) */}
+          <div className="flex-1">
+            {/* Stories */}
+            <div
+              className={`${
+                darkMode ? "bg-neutral-900" : "bg-white"
+              } border ${darkMode ? "border-neutral-800" : "border-gray-200"} rounded-lg p-4 mb-6`}
+            >
+              <div className="flex gap-4 overflow-x-auto pb-2">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="flex flex-col items-center flex-shrink-0">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-400 to-pink-600 p-0.5">
+                      <div className="bg-white rounded-full p-0.5">
+                        <img
+                          src={`https://i.pravatar.cc/100?img=${i + 1}`}
+                          alt="Story"
+                          className="w-full h-full rounded-full"
+                        />
+                      </div>
+                    </div>
+                    <span className="text-xs mt-1">user_{i + 1}</span>
                   </div>
-                </div>
-                <span className="text-xs mt-1">user_{i + 1}</span>
+                ))}
               </div>
-            ))}
+            </div>
+            {/* Posts */}
+            <div className="space-y-6">
+              {posts.map((post) => (
+                <Post key={post._id} post={post} darkMode={darkMode} />
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Posts */}
-        <div className="space-y-6">
-          {posts.map((post) => (
-            <Post key={post._id} post={post} darkMode={darkMode} />
-          ))}
+          {/* Suggestions Sidebar (visible on larger screens) */}
+          <div className="w-80 hidden lg:block">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <img
+                  className="w-12 h-12 rounded-full"
+                  src="https://i.pravatar.cc/150?img=12"
+                  alt="Your avatar"
+                />
+                <div className="ml-4">
+                  <p className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+                    your_username
+                  </p>
+                  <p className="text-xs text-gray-500">Your Name</p>
+                </div>
+              </div>
+              <button className="text-blue-500 text-sm font-semibold">
+                Switch
+              </button>
+            </div>
+            <div className="flex justify-between mb-4">
+              <p className="text-sm font-semibold text-gray-500">
+                Suggestions For You
+              </p>
+              <button className="text-xs font-bold">See All</button>
+            </div>
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <img
+                      className="w-10 h-10 rounded-full"
+                      src={`https://i.pravatar.cc/150?img=${i + 10}`}
+                      alt="Suggestion avatar"
+                    />
+                    <div className="ml-3">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                        suggestion_{i + 1}
+                      </p>
+                      <p className="text-xs text-gray-500">Suggested for you</p>
+                    </div>
+                  </div>
+                  <button className="text-blue-500 text-xs font-semibold">
+                    Follow
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

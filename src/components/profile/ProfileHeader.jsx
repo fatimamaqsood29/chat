@@ -72,6 +72,8 @@ export const ProfileHeader = ({ profileData, userId, isOwnProfile }) => {
           <Typography variant="body1">{profileData.bio}</Typography>
         </Box>
       </Box>
+
+      {/* Buttons Section */}
       {isOwnProfile ? (
         <Button
           variant="outlined"
@@ -82,13 +84,25 @@ export const ProfileHeader = ({ profileData, userId, isOwnProfile }) => {
           Edit Profile
         </Button>
       ) : (
-        <Button
-          variant="contained"
-          color={isFollowing ? "secondary" : "primary"}
-          onClick={handleFollow}
-        >
-          {isFollowing ? "Unfollow" : "Follow"}
-        </Button>
+        <Box display="flex" gap={2}>
+          {/* Follow/Unfollow Button */}
+          <Button
+            variant="contained"
+            color={isFollowing ? "secondary" : "primary"}
+            onClick={handleFollow}
+          >
+            {isFollowing ? "Unfollow" : "Follow"}
+          </Button>
+
+          {/* Message Button */}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => navigate(`/chat`)}
+          >
+            Message
+          </Button>
+        </Box>
       )}
     </Box>
   );
