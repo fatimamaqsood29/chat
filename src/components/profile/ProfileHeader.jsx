@@ -38,18 +38,23 @@ export const ProfileHeader = ({ profileData, userId, isOwnProfile }) => {
         return;
       }
 
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/users/follow/${userId}`,
+      const endpoint = isFollowing
+        ? `${import.meta.env.VITE_API_BASE_URL}/api/users/unfollow/${userId}`
+        : `${import.meta.env.VITE_API_BASE_URL}/api/users/follow/${userId}`;
+
+      const method = isFollowing ? "delete" : "post";
+
+      const response = await axios[method](
+        endpoint,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      if (response.data.message === "Successfully followed user") {
-        setIsFollowing(true);
-        toast.success("You are now following this user.");
-      } else if (response.data.message === "Successfully unfollowed user") {
-        setIsFollowing(false);
-        toast.success("You have unfollowed this user.");
+      if (response.data.message) {
+        setIsFollowing(!isFollowing);
+        toast.success(
+          isFollowing ? "You have unfollowed this user." : "You are now following this user."
+        );
       }
     } catch (error) {
       console.error("Error following/unfollowing user:", error);
@@ -87,18 +92,27 @@ export const ProfileHeader = ({ profileData, userId, isOwnProfile }) => {
         <Box display="flex" gap={2}>
           {/* Follow/Unfollow Button */}
           <Button
-            variant="contained"
+            variant={isFollowing ? "outlined" : "contained"}
             color={isFollowing ? "secondary" : "primary"}
             onClick={handleFollow}
+            sx={{
+              textTransform: "none",
+              fontWeight: "bold",
+              width: "100px",
+            }}
           >
-            {isFollowing ? "Unfollow" : "Follow"}
+            {isFollowing ? "Following" : "Follow"}
           </Button>
 
           {/* Message Button */}
           <Button
             variant="contained"
             color="primary"
-            onClick={() => navigate(`/chat`)}
+            onClick={() => navigate(`/chat/${userId}`)}
+            sx={{
+              textTransform: "none",
+              fontWeight: "bold",
+            }}
           >
             Message
           </Button>

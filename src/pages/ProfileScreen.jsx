@@ -17,11 +17,9 @@ function ProfileScreen() {
   const { userId } = useParams();
   const location = useLocation();
 
-  // Retrieve logged-in user's id and token from localStorage
   const loggedInUserId = localStorage.getItem("user_id");
   const token = localStorage.getItem("access_token");
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!loggedInUserId || !token) {
       toast.error("Please log in to view this profile.");
@@ -29,10 +27,8 @@ function ProfileScreen() {
     }
   }, [loggedInUserId, token, navigate]);
 
-  // Determine if the profile being viewed is the logged-in user's own profile
   const isOwnProfile = loggedInUserId === userId;
 
-  // State variables
   const [selectedTab, setSelectedTab] = useState("post");
   const [profileData, setProfileData] = useState({
     name: localStorage.getItem("profile_name") || "John Doe",
@@ -46,7 +42,6 @@ function ProfileScreen() {
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogType, setDialogType] = useState("");
 
-  // Fetch profile data and posts on component mount or when userId changes
   useEffect(() => {
     if (location.state?.profileData) {
       const { name, bio, profileImage, followers, following } = location.state.profileData;
@@ -60,10 +55,8 @@ function ProfileScreen() {
       fetchProfileData();
     }
     fetchUserPosts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, location.key]);
 
-  // Fetch profile details from the API
   const fetchProfileData = async () => {
     try {
       if (!token) {
@@ -95,7 +88,6 @@ function ProfileScreen() {
     }
   };
 
-  // Fetch posts from the API
   const fetchUserPosts = async () => {
     try {
       const response = await axios.get(
@@ -115,7 +107,6 @@ function ProfileScreen() {
     }
   };
 
-  // Handlers for opening the followers/following dialog
   const handleOpenDialog = async (type) => {
     if (type === "followers") {
       await fetchFollowers();
@@ -127,7 +118,6 @@ function ProfileScreen() {
     setOpenDialog(true);
   };
 
-  // Fetch followers list from the API
   const fetchFollowers = async () => {
     try {
       const response = await axios.get(
@@ -143,7 +133,6 @@ function ProfileScreen() {
     }
   };
 
-  // Fetch following list from the API
   const fetchFollowing = async () => {
     try {
       const response = await axios.get(

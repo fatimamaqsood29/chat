@@ -1,9 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 const initialState = {
-  images: [],
-  loading: false,
-  error: null,
+  images: [], // Holds the fetched images
+  loading: false, // Indicates if data is being fetched
+  error: null, // Holds any error messages
+  hasMore: true, // Indicates if there are more images to fetch (not used in infinite loop but kept for flexibility)
 };
 
 export const fetchTrendingImages = createAsyncThunk(
@@ -46,7 +47,15 @@ export const fetchTrendingImages = createAsyncThunk(
 const imageSlice = createSlice({
   name: 'images',
   initialState,
-  reducers: {},
+  reducers: {
+    // Optional: Add a reducer to reset the state if needed
+    resetImages: (state) => {
+      state.images = [];
+      state.loading = false;
+      state.error = null;
+      state.hasMore = true;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchTrendingImages.pending, (state) => {
@@ -55,7 +64,9 @@ const imageSlice = createSlice({
       })
       .addCase(fetchTrendingImages.fulfilled, (state, action) => {
         state.loading = false;
-        state.images = action.payload;
+        // Append new images to the existing array (if needed)
+        state.images = action.payload; // Replace the entire array for infinite loop
+        state.hasMore = action.payload.length > 0; // Optional: Useful for pagination
       })
       .addCase(fetchTrendingImages.rejected, (state, action) => {
         state.loading = false;
@@ -64,4 +75,5 @@ const imageSlice = createSlice({
   },
 });
 
+export const { resetImages } = imageSlice.actions; // Export the reset action if needed
 export default imageSlice.reducer;

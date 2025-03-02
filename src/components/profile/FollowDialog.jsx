@@ -8,31 +8,40 @@ import {
   ListItemText,
   IconButton,
   Avatar,
+  Button,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import { useState } from "react";
 
-export const FollowDialog = ({
-  open,
-  type,
-  onClose,
-  followers,
-  following,
-  posts,
-}) => {
+export const FollowDialog = ({ open, type, onClose, followers, following, posts }) => {
+  const [followState, setFollowState] = useState({});
+
+  const toggleFollow = (userId) => {
+    setFollowState((prev) => ({
+      ...prev,
+      [userId]: !prev[userId],
+    }));
+  };
+
   const getContent = () => {
     if (type === "followers" || type === "following") {
       const users = type === "followers" ? followers : following;
       return (
         <List>
           {users.map((user, index) => (
-            <ListItem key={user._id || user.id || index}>
+            <ListItem key={user._id || user.id || index} sx={{ display: "flex", alignItems: "center" }}>
               <ListItemAvatar>
                 <Avatar src={user.profile_picture || "/default-avatar.png"} />
               </ListItemAvatar>
-              <ListItemText
-                primary={user.name || "Unknown"}
-                secondary={user.email || ""}
-              />
+              <ListItemText primary={user.name || "Unknown"} secondary={user.email || ""} />
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => toggleFollow(user._id || user.id)}
+                sx={{ ml: "auto" }}
+              >
+                {followState[user._id || user.id] ? "Following" : "Follow"}
+              </Button>
             </ListItem>
           ))}
         </List>
@@ -44,11 +53,7 @@ export const FollowDialog = ({
         <List>
           {posts.map((image, index) => (
             <ListItem key={image._id || index}>
-              <Avatar
-                variant="rounded"
-                src={image.image_url}
-                sx={{ width: 56, height: 56, mr: 2 }}
-              />
+              <Avatar variant="rounded" src={image.image_url} sx={{ width: 56, height: 56, mr: 2 }} />
               <ListItemText primary={image.caption || "No Caption"} />
             </ListItem>
           ))}

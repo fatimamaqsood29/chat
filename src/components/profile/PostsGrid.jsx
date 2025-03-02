@@ -1,9 +1,9 @@
-import { Grid, Box, Typography, IconButton, Menu, MenuItem } from "@mui/material"; // Import Menu and MenuItem
+import { Grid, Box, Typography, IconButton, Menu, MenuItem } from "@mui/material";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { PostModal } from "./PostModel"; // Import the PostModal component
+import { PostModal } from "./PostModel";
 
 export const PostsGrid = ({ uploadedImages, fetchPosts, token, setUploadedImages }) => {
   const [selectedPost, setSelectedPost] = useState(null);
@@ -20,8 +20,7 @@ export const PostsGrid = ({ uploadedImages, fetchPosts, token, setUploadedImages
   };
 
   const handleEditPost = () => {
-    // Redirect to edit functionality in the modal
-    setSelectedPost(selectedPost); // Open the modal with the selected post
+    setSelectedPost(selectedPost);
     handleCloseMenu();
   };
 
@@ -33,7 +32,7 @@ export const PostsGrid = ({ uploadedImages, fetchPosts, token, setUploadedImages
       );
       if (response.status === 200) {
         toast.success("Post deleted successfully");
-        fetchPosts(); // Refresh the posts list
+        fetchPosts();
       }
     } catch (error) {
       console.error("Error deleting post:", error);
@@ -53,6 +52,8 @@ export const PostsGrid = ({ uploadedImages, fetchPosts, token, setUploadedImages
               textAlign: "center",
               borderRadius: 2,
               position: "relative",
+              height: "300px", // Fixed height for uniform size
+              overflow: "hidden", // Ensure content doesn't overflow
             }}
           >
             <IconButton
@@ -77,10 +78,15 @@ export const PostsGrid = ({ uploadedImages, fetchPosts, token, setUploadedImages
             <img
               src={image.image_url}
               alt={image.caption}
-              style={{ width: "100%", borderRadius: "8px" }}
+              style={{ 
+                width: "100%", 
+                height: "120%", // Ensure image fills the container
+                objectFit: "cover", // Maintain aspect ratio
+                borderRadius: "8px",
+              }}
               onClick={() => setSelectedPost(image)}
             />
-            <Typography variant="body2" mt={1}>
+            <Typography variant="body2" mt={1} sx={{ position: "absolute", bottom: 8, left: 8, right: 8, backgroundColor: "rgba(255, 255, 255, 0.8)", padding: "4px", borderRadius: "4px" }}>
               {image.caption}
             </Typography>
           </Box>
