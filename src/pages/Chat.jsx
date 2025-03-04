@@ -12,6 +12,7 @@ import {
   removeFailedMessage,
   createChatroom,
 } from '../features/chatSlice';
+import { followUser, unfollowUser, fetchSuggestions } from '../features/followSlice'; // Import followSlice actions
 import ChatSearch from '../components/chat/ChatSearch';
 import ChatList from '../components/chat/ChatList';
 import ChatHeader from '../components/chat/ChatHeader';
@@ -22,8 +23,10 @@ export default function Chat() {
   const dispatch = useDispatch();
   const { darkMode } = useThemeContext();
   const { chatrooms, currentChatroomId, messages, loading } = useSelector((state) => state.chat);
+  const { following } = useSelector((state) => state.follow); // Get following list from followSlice
   const currentUser = useSelector((state) => state.auth.user);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFollowingEachOther, setIsFollowingEachOther] = useState(false);
   const messagesEndRef = useRef(null);
 
   // Fetch chatrooms when component mounts
@@ -35,6 +38,28 @@ export default function Chat() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, currentChatroomId]);
+
+  // Check if the current user and recipient follow each other
+  useEffect(() => {
+    if (currentChatroomId) {
+      const currentChatroom = chatrooms.find((c) => c._id === currentChatroomId);
+      const recipient = currentChatroom?.participants.find((p) => p._id !== currentUser.id);
+
+      console.log('Current Chatroom:', currentChatroom);
+      console.log('Recipient:', recipient);
+
+      if (recipient) {
+        // Check if the current user follows the recipient
+        const isFollowingRecipient = following.some((user) => user.id === recipient._id);
+
+        // Check if the recipient follows the current user
+        const isRecipientFollowingCurrentUser = recipient.followers?.includes(currentUser.id);
+
+        // Update follow status
+        setIsFollowingEachOther(isFollowingRecipient && isRecipientFollowingCurrentUser);
+      }
+    }
+  }, [currentChatroomId, chatrooms, currentUser.id, following]);
 
   // Handle selecting a chatroom with error handling for fetchMessages
   const handleSelectChatroom = async (chatroomId) => {
@@ -107,8 +132,6 @@ export default function Chat() {
   const filteredChatrooms = useMemo(() => {
     return chatrooms.filter((chatroom) => {
       const user = chatroom.participants.find((p) => p._id !== currentUser.id);
-      console.log(JSON.stringify(currentUser), 'json');
-      
       return user?.name.toLowerCase().includes(searchQuery.toLowerCase());
     });
   }, [chatrooms, searchQuery, currentUser.id]);
@@ -139,19 +162,31 @@ export default function Chat() {
       <Box flex={1} display="flex" flexDirection="column">
         {currentChatroom ? (
           <>
-            <ChatHeader headerUser={recipient} darkMode={darkMode} />
-            <ChatMessages
-              messages={messages}
-              currentUser={currentUser}
-              darkMode={darkMode}
-              loading={loading}
-              messagesEndRef={messagesEndRef}
-              currentChatroomId={currentChatroomId}
-            />
-            <MessageInput 
-              handleSendMessage={handleSendMessage} 
-              darkMode={darkMode} 
-            />
+            {/* Always show ChatHeader if currentChatroom exists */}
+            {recipient && <ChatHeader headerUser={recipient} darkMode={darkMode} />}
+
+            {isFollowingEachOther ? (
+              <>
+                <ChatMessages
+                  messages={messages}
+                  currentUser={currentUser}
+                  darkMode={darkMode}
+                  loading={loading}
+                  messagesEndRef={messagesEndRef}
+                  currentChatroomId={currentChatroomId}
+                />
+                <MessageInput 
+                  handleSendMessage={handleSendMessage} 
+                  darkMode={darkMode} 
+                />
+              </>
+            ) : (
+              <Box flex={1} display="flex" alignItems="center" justifyContent="center">
+                <Typography color={darkMode ? '#a8a8a8' : '#737373'}>
+                  You cannot chat with this user because you do not follow each other.
+                </Typography>
+              </Box>
+            )}
           </>
         ) : (
           <Box flex={1} display="flex" alignItems="center" justifyContent="center">

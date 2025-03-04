@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   FaUserFriends,
@@ -15,19 +15,38 @@ import {
   FaSignOutAlt,
   FaPlus,
   FaExchangeAlt,
+  FaBell,
 } from "react-icons/fa";
-//import { useSelector } from "react-redux";
 import { useSelector, useDispatch } from "react-redux";
 import { useThemeContext } from "../ThemeContext";
 import { logout } from "../features/authSlice"; // Import logout action
 
 export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
   const dispatch = useDispatch();
-
   const { darkMode, toggleTheme } = useThemeContext();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
-  const { user } = useSelector((state) => state.auth); 
-  // Access user info from Redux
+  const { user } = useSelector((state) => state.auth); // Access user info from Redux
+
+  const moreMenuRef = useRef(null);
+
+  // Close the More menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
+        setIsMoreOpen(false);
+      }
+    }
+
+    if (isMoreOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMoreOpen]);
 
   return (
     <>
@@ -51,8 +70,9 @@ export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
               {!isSearchOpen && "Home"}
             </Link>
 
+            {/* Updated Chat Navigation to use user ID */}
             <Link
-              to="/chat"
+              to={user ? `/chat/${user.id}` : "/home"}
               className="flex items-center text-2xl hover:text-blue-500"
             >
               <FaComments className="mr-4 text-3xl" />
@@ -91,11 +111,19 @@ export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
               <FaCompass className="mr-4 text-3xl" />
               Explorer
             </Link>
+
+            <Link
+              to="/notifications"
+              className="flex items-center text-2xl hover:text-blue-500"
+            >
+              <FaBell className="mr-4 text-3xl" />
+              Notifications
+            </Link>
           </div>
         </div>
 
         {/* Footer Section with More Menu */}
-        <div className="relative">
+        <div className="relative" ref={moreMenuRef}>
           <button
             onClick={() => setIsMoreOpen((prev) => !prev)}
             className="flex items-center text-2xl hover:text-blue-500 focus:outline-none"
@@ -127,7 +155,7 @@ export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
                 <FaExchangeAlt className="mr-4 text-2xl" />
                 Switch Appearance
               </button>
-              
+
               <Link
                 to="/login"
                 className="flex items-center px-4 py-2 hover:bg-red-500 focus:outline-none"
@@ -151,25 +179,29 @@ export default function Navbar({ setIsSearchOpen, isSearchOpen }) {
           <FaHome className="text-2xl" />
           <span className="text-sm">Home</span>
         </Link>
-        <Link to="/search" className="flex flex-col items-center">
+
+        {/* Ensure Search works correctly */}
+        <button
+          onClick={() => setIsSearchOpen((prev) => !prev)}
+          className="flex flex-col items-center focus:outline-none"
+        >
           <FaSearch className="text-2xl" />
           <span className="text-sm">Search</span>
-        </Link>
+        </button>
+
         <Link to="/create" className="flex flex-col items-center">
           <FaPlus className="text-2xl" />
           <span className="text-sm">Create</span>
         </Link>
+
         <Link to="/explorer" className="flex flex-col items-center">
           <FaCompass className="text-2xl" />
           <span className="text-sm">Explorer</span>
         </Link>
-        
-        <Link
-          to={`/profile/${user?.id}`}
-          className="flex items-center text-2xl hover:text-blue-500"
-        >
-          <FaUser className="mr-4 text-3xl" />
-          {!isSearchOpen && "Profile"}
+
+        <Link to={user ? `/profile/${user.id}` : "/login"} className="flex flex-col items-center">
+          <FaUser className="text-2xl" />
+          <span className="text-sm">Profile</span>
         </Link>
       </nav>
     </>

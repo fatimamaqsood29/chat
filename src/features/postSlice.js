@@ -32,29 +32,54 @@ export const createPost = createAsyncThunk(
 );
 
 // Fetch Posts
+// export const fetchPosts = createAsyncThunk(
+//   "posts/fetchPosts",
+//   async (_, { rejectWithValue }) => {
+//     try {
+//       const token = localStorage.getItem("access_token");
+//       if (!token) throw new Error("Authentication token is missing.");
+//       const response = await fetch(
+//         `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts`,
+//         {
+//           method: "GET",
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//           },
+//         }
+//       );
+//       const data = await response.json();
+//       if (!response.ok) throw new Error(data.message || "Failed to fetch posts");
+//       return data;
+//     } catch (error) {
+//       return rejectWithValue(error.message);
+//     }
+//   }
+// );
+// Fetch Posts
 export const fetchPosts = createAsyncThunk(
   "posts/fetchPosts",
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("access_token");
       if (!token) throw new Error("Authentication token is missing.");
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+
+      const response = await fetch("${import.meta.env.VITE_API_BASE_URL}/api/posts/posts/random", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Failed to fetch posts");
+
       return data;
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
+
 
 // Like Post
 export const likePost = createAsyncThunk(
@@ -118,7 +143,7 @@ export const addReply = createAsyncThunk(
     console.log("addReply Params:", { postId, commentId, replyText });
 
     // Debugger statement to pause execution
-    debugger;
+    //debugger;
 
     try {
       // Check if required parameters are present

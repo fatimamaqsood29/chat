@@ -14,18 +14,19 @@ import EditProfileScreen from './pages/EditProfileScreen';
 import SearchScreen from './pages/SearchScreen';
 import CreateScreen from './pages/CreateScreen';
 import ExplorerScreen from './pages/ExplorerScreen';
+import NotificationsScreen from './pages/NotificationsScreen';
 
 function AppContent() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const location = useLocation();
 
-  // Check if the current path requires hiding the Navbar
+  // Paths where Navbar should be hidden
   const hideNavbarRoutes = ['/', '/signup'];
   const hideNavbar = hideNavbarRoutes.includes(location.pathname);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row relative">
-      {/* Fixed Navigation Bar for larger screens */}
+      {/* Sidebar Navbar */}
       {!hideNavbar && (
         <div className="w-full md:w-64 md:h-screen fixed md:left-0 bg-gray-100 dark:bg-gray-900 z-10">
           <Navbar setIsSearchOpen={setIsSearchOpen} isSearchOpen={isSearchOpen} />
@@ -39,11 +40,11 @@ function AppContent() {
         </div>
       )}
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <div
-        className={`flex-grow p-4 ${
+        className={`flex-grow p-4 transition-all ${
           isSearchOpen ? 'md:ml-96' : hideNavbar ? 'ml-0' : 'md:ml-64'
-        } transition-all`}
+        }`}
       >
         <Toaster position="top-right" reverseOrder={false} />
         <Routes>
@@ -51,12 +52,11 @@ function AppContent() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/home" element={<Home />} />
           <Route path="/explorer" element={<ExplorerScreen />} />
-          <Route path="/chat" element={<Chat />} />
+          <Route path="/chat/:userId" element={<Chat />} />
           <Route path="/profile/:userId" element={<ProfileScreen />} />
-
-          {/* <Route path="/profile" element={<ProfileScreen />} /> */}
           <Route path="/edit-profile" element={<EditProfileScreen />} />
           <Route path="/create" element={<CreateScreen />} />
+          <Route path="/notifications" element={<NotificationsScreen />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
