@@ -85,15 +85,33 @@ const followSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(followUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(followUser.fulfilled, (state, action) => {
         const { userId } = action.payload;
         if (!state.following.some((user) => user.id === userId)) {
           state.following.push({ id: userId });
         }
+        state.loading = false;
+      })
+      .addCase(followUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(unfollowUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
       .addCase(unfollowUser.fulfilled, (state, action) => {
         const { userId } = action.payload;
         state.following = state.following.filter((user) => user.id !== userId);
+        state.loading = false;
+      })
+      .addCase(unfollowUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
       .addCase(fetchSuggestions.pending, (state) => {
         state.loading = true;

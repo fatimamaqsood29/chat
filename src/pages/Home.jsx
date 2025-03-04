@@ -11,11 +11,12 @@ const Home = () => {
   
   const posts = useSelector((state) => state.post.posts);
   const suggestions = useSelector((state) => state.follow.suggestions);
-  const loading = useSelector((state) => state.follow.loading);
+  const postsLoading = useSelector((state) => state.post.loading);
+  const suggestionsLoading = useSelector((state) => state.follow.loading);
   
   useEffect(() => {
-    dispatch(fetchPosts());
-    dispatch(fetchSuggestions());
+    dispatch(fetchPosts()); // Fetch posts
+    dispatch(fetchSuggestions()); // Fetch suggestions
   }, [dispatch]);
 
   return (
@@ -23,6 +24,7 @@ const Home = () => {
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="flex gap-4">
           <div className="flex-1">
+            {/* Stories Section */}
             <div className={`${darkMode ? "bg-neutral-900" : "bg-white"} border ${darkMode ? "border-neutral-800" : "border-gray-200"} rounded-lg p-4 mb-6`}>
               <div className="flex gap-4 overflow-x-auto pb-2">
                 {[...Array(8)].map((_, i) => (
@@ -41,12 +43,24 @@ const Home = () => {
                 ))}
               </div>
             </div>
-            <div className="space-y-6">
-              {posts.map((post) => (
-                <Post key={post._id} post={post} darkMode={darkMode} />
-              ))}
-            </div>
+
+            {/* Posts Section */}
+            {postsLoading ? (
+              <p className="text-gray-500 text-sm">Loading posts...</p>
+            ) : (
+              <div className="space-y-6">
+                {posts.length > 0 ? (
+                  posts.map((post) => (
+                    <Post key={post._id} post={post} darkMode={darkMode} />
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-sm">No posts available</p>
+                )}
+              </div>
+            )}
           </div>
+
+          {/* Suggestions Section */}
           <div className="w-80 hidden lg:block">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
@@ -66,7 +80,7 @@ const Home = () => {
               <p className="text-sm font-semibold text-gray-500">Suggestions For You</p>
               <button className="text-xs font-bold">See All</button>
             </div>
-            {loading ? (
+            {suggestionsLoading ? (
               <p className="text-gray-500 text-sm">Loading suggestions...</p>
             ) : (
               <div className="space-y-4">
@@ -76,11 +90,11 @@ const Home = () => {
                       <div className="flex items-center">
                         <img
                           className="w-10 h-10 rounded-full"
-                          src={user.profilePic || `https://i.pravatar.cc/150?img=13`}
-                          alt={user.username}
+                          src={user.profile_picture || `https://i.pravatar.cc/150?img=13`}
+                          alt={user.name}
                         />
                         <div className="ml-3">
-                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user.username}</p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user.name}</p>
                           <p className="text-xs text-gray-500">Suggested for you</p>
                         </div>
                       </div>

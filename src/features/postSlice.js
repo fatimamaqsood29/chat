@@ -1,4 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Create Post
 export const createPost = createAsyncThunk(
@@ -7,79 +10,44 @@ export const createPost = createAsyncThunk(
     try {
       const token = localStorage.getItem("access_token");
       if (!token) throw new Error("Authentication token is missing.");
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts`,
+      const response = await axios.post(
+        `${API_BASE_URL}/api/posts/posts`,
+        formData,
         {
-          method: "POST",
-          body: formData,
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
           },
         }
       );
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to create post");
-      return {
-        postId: data.post_id,
-        imageUrl: data.image_url,
-        caption: formData.get("caption"),
-        user: data.user,
-      };
+      return response.data;
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.response?.data?.message || "Failed to create post");
     }
   }
 );
 
-// Fetch Posts
-// export const fetchPosts = createAsyncThunk(
-//   "posts/fetchPosts",
-//   async (_, { rejectWithValue }) => {
-//     try {
-//       const token = localStorage.getItem("access_token");
-//       if (!token) throw new Error("Authentication token is missing.");
-//       const response = await fetch(
-//         `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts`,
-//         {
-//           method: "GET",
-//           headers: {
-//             Authorization: `Bearer ${token}`,
-//           },
-//         }
-//       );
-//       const data = await response.json();
-//       if (!response.ok) throw new Error(data.message || "Failed to fetch posts");
-//       return data;
-//     } catch (error) {
-//       return rejectWithValue(error.message);
-//     }
-//   }
-// );
-// Fetch Posts
+// Fetch Random Posts
 export const fetchPosts = createAsyncThunk(
   "posts/fetchPosts",
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("access_token");
       if (!token) throw new Error("Authentication token is missing.");
-
-      const response = await fetch("${import.meta.env.VITE_API_BASE_URL}/api/posts/posts/random", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to fetch posts");
-
-      return data;
+      const response = await axios.get(
+        `${API_BASE_URL}/api/posts/posts/random`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch posts");
     }
   }
 );
-
 
 // Like Post
 export const likePost = createAsyncThunk(
@@ -88,20 +56,18 @@ export const likePost = createAsyncThunk(
     try {
       const token = localStorage.getItem("access_token");
       if (!token) throw new Error("Authentication token is missing.");
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts/${postId}/like`,
+      const response = await axios.post(
+        `${API_BASE_URL}/api/posts/posts/${postId}/like`,
+        {},
         {
-          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to like post");
-      return { postId, likes_count: data.likes_count, isLiked: data.is_liked };
+      return response.data;
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.response?.data?.message || "Failed to like post");
     }
   }
 );
@@ -113,24 +79,19 @@ export const addComment = createAsyncThunk(
     try {
       const token = localStorage.getItem("access_token");
       if (!token) throw new Error("Authentication token is missing.");
-
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts/${postId}/comment`, // Matches backend route
+      const response = await axios.post(
+        `${API_BASE_URL}/api/posts/posts/${postId}/comment`,
+        { comment_text: commentText },
         {
-          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ comment_text: commentText }),
         }
       );
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to add comment");
-      return { postId, comment: data.comment };
+      return response.data;
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.response?.data?.message || "Failed to add comment");
     }
   }
 );
@@ -139,80 +100,46 @@ export const addComment = createAsyncThunk(
 export const addReply = createAsyncThunk(
   "posts/addReply",
   async ({ postId, commentId, replyText }, { rejectWithValue }) => {
-    // Debugging: Log parameters to ensure they are correct
-    console.log("addReply Params:", { postId, commentId, replyText });
-
-    // Debugger statement to pause execution
-    //debugger;
-
     try {
-      // Check if required parameters are present
-      if (!postId || !commentId || !replyText) {
-        throw new Error("Missing required parameters (postId, commentId, or replyText).");
-      }
-
-      // Retrieve the authentication token from localStorage
       const token = localStorage.getItem("access_token");
-      if (!token) {
-        throw new Error("Authentication token is missing.");
-      }
-
-      // Make the API request to add a reply
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts/${postId}/comments/${commentId}/reply`,
+      if (!token) throw new Error("Authentication token is missing.");
+      const response = await axios.post(
+        `${API_BASE_URL}/api/posts/posts/${postId}/comments/${commentId}/reply`,
+        { reply_text: replyText },
         {
-          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ reply_text: replyText }),
         }
       );
-
-      // Parse the response
-      const data = await response.json();
-
-      // Check if the response is not OK (e.g., 4xx or 5xx status)
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to add reply.");
-      }
-
-      // Return the response data for the Redux store
-      return { postId, commentId, reply: data.reply };
+      return response.data;
     } catch (error) {
-      // Handle errors and return them with rejectWithValue
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.response?.data?.message || "Failed to add reply");
     }
   }
 );
+
 // Update Reply
 export const updateReply = createAsyncThunk(
   "posts/updateReply",
   async ({ postId, commentId, replyId, replyText }, { rejectWithValue }) => {
-    debugger
     try {
-    
       const token = localStorage.getItem("access_token");
       if (!token) throw new Error("Authentication token is missing.");
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/posts/posts/${postId}/comments/${commentId}/replies/${replyId}`,
+      const response = await axios.put(
+        `${API_BASE_URL}/api/posts/posts/${postId}/comments/${commentId}/replies/${replyId}`,
+        { reply_text: replyText },
         {
-          method: "PUT",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ reply_text: replyText }),
         }
-        
       );
-      console.error("Server Error:", error.response?.data);
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to update reply");
-      return { postId, commentId, replyId, reply: data.reply };
+      return response.data;
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.response?.data?.message || "Failed to update reply");
     }
   }
 );
@@ -227,7 +154,7 @@ const postSlice = createSlice({
   reducers: {
     // Optional optimistic toggle (if needed)
     toggleLikeOptimistic: (state, action) => {
-      const post = state.posts.find(p => p._id === action.payload.postId);
+      const post = state.posts.find((p) => p._id === action.payload.postId);
       if (post) {
         post.isLiked = !post.isLiked;
         post.likes_count = post.isLiked ? post.likes_count + 1 : post.likes_count - 1;
@@ -243,15 +170,7 @@ const postSlice = createSlice({
       })
       .addCase(createPost.fulfilled, (state, action) => {
         state.loading = false;
-        state.posts.unshift({
-          _id: action.payload.postId,
-          image_url: action.payload.imageUrl,
-          caption: action.payload.caption,
-          user: action.payload.user,
-          isLiked: false,
-          likes_count: 0,
-          comments: [],
-        });
+        state.posts.unshift(action.payload);
       })
       .addCase(createPost.rejected, (state, action) => {
         state.loading = false;
@@ -264,11 +183,7 @@ const postSlice = createSlice({
       })
       .addCase(fetchPosts.fulfilled, (state, action) => {
         state.loading = false;
-        state.posts = action.payload.map(post => ({
-          ...post,
-          likes_count: post.likes_count || (post.likes ? post.likes.length : 0),
-          comments: post.comments || [],
-        }));
+        state.posts = action.payload;
       })
       .addCase(fetchPosts.rejected, (state, action) => {
         state.loading = false;
@@ -276,24 +191,22 @@ const postSlice = createSlice({
       })
       // Like Post
       .addCase(likePost.pending, (state, action) => {
-        const post = state.posts.find(p => p._id === action.meta.arg);
+        const post = state.posts.find((p) => p._id === action.meta.arg);
         if (post) {
-          // Optimistic update: toggle like
           post.isLiked = !post.isLiked;
           post.likes_count = post.isLiked ? post.likes_count + 1 : post.likes_count - 1;
         }
       })
       .addCase(likePost.fulfilled, (state, action) => {
-        const post = state.posts.find(p => p._id === action.payload.postId);
+        const post = state.posts.find((p) => p._id === action.payload.postId);
         if (post) {
           post.likes_count = action.payload.likes_count;
           post.isLiked = action.payload.isLiked;
         }
       })
       .addCase(likePost.rejected, (state, action) => {
-        const post = state.posts.find(p => p._id === action.meta.arg);
+        const post = state.posts.find((p) => p._id === action.meta.arg);
         if (post) {
-          // Revert optimistic update
           post.isLiked = !post.isLiked;
           post.likes_count = post.isLiked ? post.likes_count + 1 : post.likes_count - 1;
         }
@@ -306,7 +219,7 @@ const postSlice = createSlice({
       })
       .addCase(addComment.fulfilled, (state, action) => {
         state.loading = false;
-        const post = state.posts.find(p => p._id === action.payload.postId);
+        const post = state.posts.find((p) => p._id === action.payload.postId);
         if (post) {
           post.comments.unshift(action.payload.comment);
         }
@@ -323,9 +236,9 @@ const postSlice = createSlice({
       .addCase(addReply.fulfilled, (state, action) => {
         state.loading = false;
         const { postId, commentId, reply } = action.payload;
-        const post = state.posts.find(p => p._id === postId);
+        const post = state.posts.find((p) => p._id === postId);
         if (post) {
-          const comment = post.comments.find(c => c._id === commentId);
+          const comment = post.comments.find((c) => c._id === commentId);
           if (comment) {
             if (!comment.replies) comment.replies = [];
             comment.replies.push(reply);
@@ -344,11 +257,11 @@ const postSlice = createSlice({
       .addCase(updateReply.fulfilled, (state, action) => {
         state.loading = false;
         const { postId, commentId, replyId, reply } = action.payload;
-        const post = state.posts.find(p => p._id === postId);
+        const post = state.posts.find((p) => p._id === postId);
         if (post) {
-          const comment = post.comments.find(c => c._id === commentId);
+          const comment = post.comments.find((c) => c._id === commentId);
           if (comment && comment.replies) {
-            const index = comment.replies.findIndex(r => r._id === replyId);
+            const index = comment.replies.findIndex((r) => r._id === replyId);
             if (index !== -1) {
               comment.replies[index] = reply;
             }
