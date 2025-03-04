@@ -6,6 +6,7 @@ import { addReply, updateReply } from "../../features/postSlice";
 import Reply from "./Reply";
 
 const Comment = ({ comment, postId, darkMode }) => {
+
   const dispatch = useDispatch();
   const [openReplies, setOpenReplies] = useState(false);
   const [openReplyInput, setOpenReplyInput] = useState(false);
@@ -13,9 +14,14 @@ const Comment = ({ comment, postId, darkMode }) => {
   const [editingReply, setEditingReply] = useState(null);
 
   const handleReply = async () => {
+    console.log(comment);
+
     if (!replyText.trim()) return;
     try {
-      await dispatch(addReply({ postId, commentId: comment._id, replyText })).unwrap();
+      console.log("commitid",comment._id);
+
+      await dispatch(addReply({ postId, commentId: comment.comment_id, replyText })).unwrap();
+      
       setReplyText("");
       setOpenReplies(true);
     } catch (error) {

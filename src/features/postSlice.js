@@ -95,43 +95,14 @@ export const addComment = createAsyncThunk(
     }
   }
 );
-
-// export const addReply = createAsyncThunk(
-//   "posts/addReply",
-//   async ({ postId, commentId, replyText }, { rejectWithValue }) => {
-//     try {
-//       console.log("Post ID:", postId); // Debugging
-//       console.log("Comment ID:", commentId); // Debugging
-//       const token = localStorage.getItem("access_token");
-//       if (!token) throw new Error("Authentication token is missing.");
-//       const response = await axios.post(
-//         `${API_BASE_URL}/api/posts/posts/${postId}/comments/${commentId}/reply`,
-//         { reply_text: replyText },
-//         {
-//           headers: {
-//             Authorization: `Bearer ${token}`,
-//             "Content-Type": "application/json",
-//           },
-//         }
-//       );
-//       return response.data;
-//     } catch (error) {
-//       return rejectWithValue(error.response?.data?.message || "Failed to add reply");
-//     }
-//   }
-// );
 export const addReply = createAsyncThunk(
   "posts/addReply",
   async ({ postId, commentId, replyText }, { rejectWithValue }) => {
     try {
       console.log("Post ID:", postId); // Debugging
       console.log("Comment ID:", commentId); // Debugging
-
-      if (!commentId) throw new Error("Comment ID is missing.");
-
       const token = localStorage.getItem("access_token");
       if (!token) throw new Error("Authentication token is missing.");
-
       const response = await axios.post(
         `${API_BASE_URL}/api/posts/posts/${postId}/comments/${commentId}/reply`,
         { reply_text: replyText },
@@ -148,6 +119,34 @@ export const addReply = createAsyncThunk(
     }
   }
 );
+// export const addReply = createAsyncThunk(
+//   "posts/addReply",
+//   async ({ postId, commentId, replyText }, { rejectWithValue }) => {
+//     try {
+//       console.log("Post ID:", postId); // Debugging
+//       console.log("Comment ID:", commentId); // Debugging
+
+//       if (!commentId) throw new Error("Comment ID is missing.");
+
+//       const token = localStorage.getItem("access_token");
+//       if (!token) throw new Error("Authentication token is missing.");
+
+//       const response = await axios.post(
+//         `${API_BASE_URL}/api/posts/posts/${postId}/comments/${commentId}/reply`,
+//         { reply_text: replyText },
+//         {
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//             "Content-Type": "application/json",
+//           },
+//         }
+//       );
+//       return response.data;
+//     } catch (error) {
+//       return rejectWithValue(error.response?.data?.message || "Failed to add reply");
+//     }
+//   }
+// );
 
 // Update Reply
 export const updateReply = createAsyncThunk(

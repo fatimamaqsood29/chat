@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Box, TextField, Button, Avatar } from "@mui/material";
+import { Box, TextField, Button, Avatar, CircularProgress } from "@mui/material";
 
 function EditProfileScreen() {
   const navigate = useNavigate();
@@ -18,6 +18,7 @@ function EditProfileScreen() {
   const [name, setName] = useState(initialProfile.name);
   const [bio, setBio] = useState(initialProfile.bio);
   const [profileImage, setProfileImage] = useState(initialProfile.profileImage);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("access_token");
@@ -29,16 +30,34 @@ function EditProfileScreen() {
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileImage(reader.result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Validate file type and size
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload a valid image file.");
+      return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size must be less than 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProfileImage(reader.result);
+    };
+    reader.onerror = () => {
+      toast.error("Failed to read the image file.");
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSave = async () => {
+    if (!name.trim() || !bio.trim()) {
+      toast.error("Name and Bio cannot be empty.");
+      return;
+    }
+
     const storedToken = localStorage.getItem("access_token");
     if (!storedToken) {
       toast.error("User not authenticated");
@@ -46,36 +65,33 @@ function EditProfileScreen() {
       return;
     }
 
+    setIsLoading(true);
+
     try {
       const response = await axios.put(
         `${import.meta.env.VITE_API_BASE_URL}/api/users/profile/update`,
         { 
           name, 
           bio, 
-          profile_picture: profileImage  // send the key the API expects
+          profile_picture: profileImage 
         },
         { headers: { Authorization: `Bearer ${storedToken}` } }
       );
 
       console.log("Update response:", response.data);
-      // Since the API response doesn't return the updated user data,
-      // we'll use the submitted values.
-      const updatedName = name;
-      const updatedBio = bio;
-      const updatedImage = profileImage;
 
       // Update local storage with the new data
-      localStorage.setItem("profile_name", updatedName);
-      localStorage.setItem("profile_bio", updatedBio);
-      localStorage.setItem("profile_image", updatedImage || "/default-avatar.png");
+      localStorage.setItem("profile_name", name);
+      localStorage.setItem("profile_bio", bio);
+      localStorage.setItem("profile_image", profileImage || "/default-avatar.png");
 
       // Navigate back to the profile screen with the updated data
       navigate(`/profile/${userId}`, {
         state: {
           profileData: {
-            name: updatedName,
-            bio: updatedBio,
-            profileImage: updatedImage,
+            name,
+            bio,
+            profileImage,
           },
         },
       });
@@ -89,6 +105,8 @@ function EditProfileScreen() {
       } else {
         toast.error(error.response?.data?.message || "Failed to update profile.");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -97,7 +115,12 @@ function EditProfileScreen() {
       <ToastContainer />
       <Box display="flex" alignItems="center" gap={2} mb={3}>
         <Avatar src={profileImage} sx={{ width: 80, height: 80 }} />
-        <input type="file" accept="image/*" onChange={handleImageUpload} />
+        <input 
+          type="file" 
+          accept="image/*" 
+          onChange={handleImageUpload} 
+          disabled={isLoading}
+        />
       </Box>
 
       <TextField
@@ -106,6 +129,7 @@ function EditProfileScreen() {
         value={name}
         onChange={(e) => setName(e.target.value)}
         sx={{ mb: 2 }}
+        disabled={isLoading}
       />
       <TextField
         fullWidth
@@ -115,10 +139,16 @@ function EditProfileScreen() {
         multiline
         rows={3}
         sx={{ mb: 2 }}
+        disabled={isLoading}
       />
 
-      <Button variant="contained" color="primary" onClick={handleSave}>
-        Save Changes
+      <Button 
+        variant="contained" 
+        color="primary" 
+        onClick={handleSave}
+        disabled={isLoading}
+      >
+        {isLoading ? <CircularProgress size={24} /> : "Save Changes"}
       </Button>
     </Box>
   );

@@ -3,9 +3,9 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   profileData: {
-    name: '',
-    bio: '',
-    profileImage: '/default-avatar.png',
+    name: localStorage.getItem('profile_name') || '',
+    bio: localStorage.getItem('profile_bio') || '',
+    profileImage: localStorage.getItem('profile_image') || '/default-avatar.png',
   },
   followers: [],
   following: [],
@@ -20,6 +20,10 @@ const profileSlice = createSlice({
   reducers: {
     setProfileData: (state, action) => {
       state.profileData = action.payload;
+      // Update localStorage
+      localStorage.setItem('profile_name', action.payload.name);
+      localStorage.setItem('profile_bio', action.payload.bio);
+      localStorage.setItem('profile_image', action.payload.profileImage || '/default-avatar.png');
     },
     setFollowers: (state, action) => {
       state.followers = action.payload;
@@ -41,6 +45,10 @@ const profileSlice = createSlice({
       state.followers = [];
       state.following = [];
       state.posts = [];
+      // Clear localStorage
+      localStorage.removeItem('profile_name');
+      localStorage.removeItem('profile_bio');
+      localStorage.removeItem('profile_image');
     },
   },
 });
