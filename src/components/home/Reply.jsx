@@ -1,8 +1,8 @@
 import React from "react";
 
-const Reply = ({ reply, postId, comment_Id, darkMode, editingReply, setEditingReply, handleUpdateReply }) => {
+const Reply = ({ reply, postId, commentId, darkMode, editingReply, setEditingReply, handleUpdateReply }) => {
   const isEditing = editingReply?.id === reply._id;
-  //console.log(`/api/posts/posts/${postId}/comments/${commentId}/replies`);
+
   return (
     <div className={`flex items-start text-sm mt-1 ${darkMode ? "text-white" : "text-black"}`}>
       <span className="font-semibold">{reply.user?.username}</span>
@@ -17,7 +17,7 @@ const Reply = ({ reply, postId, comment_Id, darkMode, editingReply, setEditingRe
             } focus:outline-none`}
           />
           <button
-            onClick={() => handleUpdateReply(reply._id)}
+            onClick={() => handleUpdateReply(postId, commentId, reply._id, editingReply.text)}
             className="ml-2 text-blue-500 text-xs hover:underline"
           >
             Save
