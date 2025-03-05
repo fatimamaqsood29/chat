@@ -1,7 +1,10 @@
 import React from "react";
 
 const Reply = ({ reply, postId, commentId, darkMode, editingReply, setEditingReply, handleUpdateReply }) => {
+console.log( reply, postId, commentId, darkMode, editingReply, setEditingReply, handleUpdateReply);
+
   const isEditing = editingReply?.id === reply._id;
+console.log(isEditing);
 
   return (
     <div className={`flex items-start text-sm mt-1 ${darkMode ? "text-white" : "text-black"}`}>

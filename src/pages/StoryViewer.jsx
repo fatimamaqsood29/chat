@@ -4,25 +4,54 @@ import axios from 'axios';
 import { Toaster, toast } from 'react-hot-toast';
 
 const StoryViewer = () => {
-  const { userId } = useParams();
+  const { userId: urlUserId } = useParams(); // Rename to avoid conflict
   const navigate = useNavigate();
   const [stories, setStories] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const token = localStorage.getItem('access_token');
 
+  // Get userId from URL params, localStorage, or parsed user object
+  const userId = urlUserId && urlUserId !== "undefined" 
+    ? urlUserId 
+    : localStorage.getItem("user_id") || JSON.parse(localStorage.getItem("user"))?.id;
+
+  // Debugging logs
+  console.log({
+    urlUserId,
+    localStorageUserId: localStorage.getItem("user_id"),
+    parsedUser: JSON.parse(localStorage.getItem("user")),
+    finalUserId: userId
+  });
+
   useEffect(() => {
+    if (!userId || userId === "undefined") { // Explicit check
+      toast.error("Invalid user ID. Redirecting...");
+      navigate("/home");
+      return;
+    }
+
     const fetchStories = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/posts/stories/${userId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/posts/stories/${userId}`;
+        console.log("Fetching stories from:", apiUrl);
+        
+        const response = await axios.get(apiUrl, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        console.log("Stories fetched:", response.data);
         setStories(response.data);
       } catch (error) {
-        toast.error('Failed to load stories');
-        navigate('/home');
+        console.error("Error fetching stories:", error.response || error);
+        if (error.response?.status === 405) {
+          toast.error("The server does not support this request method.");
+        } else {
+          toast.error("Failed to load stories.");
+        }
+        navigate("/home");
       }
     };
+
     fetchStories();
   }, [userId, token, navigate]);
 
@@ -30,7 +59,7 @@ const StoryViewer = () => {
     if (currentIndex < stories.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      navigate('/home');
+      navigate("/home");
     }
   };
 
@@ -40,7 +69,7 @@ const StoryViewer = () => {
     }
   };
 
-  if (!stories.length) return <div>Loading...</div>;
+  if (!stories.length) return <div>No stories available.</div>;
 
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center">

@@ -12,16 +12,55 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate'; // Fo
 
 export const ProfileHeader = ({
   profileData,
-  userId,
+  userId: propUserId, // userId passed as a prop
   isOwnProfile,
   loggedInUserId,
   onStoryUpload,
-  stories,
   onDeleteStory,
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isFollowing, setIsFollowing] = useState(false);
+  const [stories, setStories] = useState([]);
+
+  // Retrieve userId from localStorage if not passed as a prop
+  const userId = propUserId || localStorage.getItem("user_id") || JSON.parse(localStorage.getItem("user"))?.id;
+
+  // Debugging: Log the userId and localStorage data
+  console.log({
+    propUserId,
+    localStorageUserId: localStorage.getItem("user_id"),
+    parsedUser: JSON.parse(localStorage.getItem("user")),
+    finalUserId: userId
+  });
+
+  // Fetch stories for the logged-in user
+  const fetchStories = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/stories/me`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return response.data; // Array of stories
+    } catch (error) {
+      console.error("Error fetching stories:", error);
+      toast.error("Failed to fetch stories.");
+      return [];
+    }
+  };
+
+  // Load stories when the component mounts
+  useEffect(() => {
+    const loadStories = async () => {
+      const storiesData = await fetchStories();
+      setStories(storiesData);
+    };
+
+    if (isOwnProfile) {
+      loadStories();
+    }
+  }, [isOwnProfile]);
 
   // Check the follow status only if viewing someone else's profile
   useEffect(() => {
@@ -39,8 +78,8 @@ export const ProfileHeader = ({
     };
 
     if (!isOwnProfile) {
-      profileData?.followers?.map(followerId => {
-        if (followerId == loggedInUserId) {
+      profileData?.followers?.forEach(followerId => {
+        if (followerId === loggedInUserId) {
           setIsFollowing(true);
           return;
         }
@@ -200,7 +239,14 @@ export const ProfileHeader = ({
             alignItems="center"
             gap={1}
             sx={{ cursor: "pointer" }}
-            onClick={() => navigate(`/stories/${story.user._id}`)}
+            onClick={() => {
+              if (story.user?._id) {
+                navigate(`/stories/${story.user._id}`);
+              } else {
+                console.error('Story user ID is undefined:', story);
+                toast.error('Failed to load story. User ID is missing.');
+              }
+            }}
           >
             <Avatar
               src={story.imageUrl}
