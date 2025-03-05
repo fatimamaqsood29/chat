@@ -96,6 +96,7 @@ export const addComment = createAsyncThunk(
 export const addReply = createAsyncThunk(
   "posts/addReply",
   async ({ postId, commentId, replyText }, { rejectWithValue }) => {
+    
     try {
       if (!commentId) throw new Error("Comment ID is missing.");
       const token = getAuthToken();
@@ -117,14 +118,45 @@ export const addReply = createAsyncThunk(
 );
 
 // Update Reply
+// export const updateReply = createAsyncThunk(
+//   "posts/updateReply",
+//   async ({ postId, commentId, replyId, replyText }, { rejectWithValue }) => {
+    
+//     console.log(replyText);
+    
+//     try {
+//       const token = getAuthToken();
+//       const response = await axios.put(
+//         `${API_BASE_URL}/api/posts/posts/${postId}/comments/${commentId}/replies/${replyId}`,
+//         { reply_text: replyText },
+//         {
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//             "Content-Type": "application/json",
+//           },
+//         }
+//       );
+//       return response.data;
+//     } catch (error) {
+//       return rejectWithValue(error.response?.data?.message || "Failed to update reply");
+//     }
+//   }
+// );
 export const updateReply = createAsyncThunk(
   "posts/updateReply",
   async ({ postId, commentId, replyId, replyText }, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
+      console.log("Sending PUT request to update reply with:", {
+        postId,
+        commentId,
+        replyId,
+        replyText,
+      });
+
       const response = await axios.put(
         `${API_BASE_URL}/api/posts/posts/${postId}/comments/${commentId}/replies/${replyId}`,
-        { reply_text: replyText },
+        { reply_text: replyText }, // Send in the request body
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -132,12 +164,16 @@ export const updateReply = createAsyncThunk(
           },
         }
       );
+
+      console.log("Response from backend:", response.data);
       return response.data;
     } catch (error) {
+      console.error("Error updating reply:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.message || "Failed to update reply");
     }
   }
 );
+
 
 const postSlice = createSlice({
   name: "posts",

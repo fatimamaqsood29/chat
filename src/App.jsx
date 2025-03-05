@@ -15,6 +15,7 @@ import SearchScreen from './pages/SearchScreen';
 import CreateScreen from './pages/CreateScreen';
 import ExplorerScreen from './pages/ExplorerScreen';
 import NotificationsScreen from './pages/NotificationsScreen';
+import StoryViewer from './pages/StoryViewer'; // Import the StoryViewer component
 
 function AppContent() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -57,6 +58,7 @@ function AppContent() {
           <Route path="/edit-profile" element={<EditProfileScreen />} />
           <Route path="/create" element={<CreateScreen />} />
           <Route path="/notifications" element={<NotificationsScreen />} />
+          <Route path="/stories/:userId" element={<StoryViewer />} /> {/* Story Viewer Route */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>

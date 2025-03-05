@@ -10,7 +10,7 @@ const Reply = ({ reply, postId, commentId, darkMode, editingReply, setEditingRep
         <>
           <input
             type="text"
-            value={editingReply.text}
+            value={editingReply?.text || ""} // Ensure editingReply is not null
             onChange={(e) => setEditingReply({ id: reply._id, text: e.target.value })}
             className={`ml-2 flex-1 bg-transparent border-b ${
               darkMode ? "border-gray-500" : "border-gray-300"

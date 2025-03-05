@@ -1,12 +1,9 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { addReply, updateReply } from "../../features/postSlice";
-//import { likePost, addComment } from "../../features/postSlice";
-
 import Reply from "./Reply";
 
 const Comment = ({ comment, postId, darkMode }) => {
-
   const dispatch = useDispatch();
   const [openReplies, setOpenReplies] = useState(false);
   const [openReplyInput, setOpenReplyInput] = useState(false);
@@ -14,13 +11,13 @@ const Comment = ({ comment, postId, darkMode }) => {
   const [editingReply, setEditingReply] = useState(null);
 
   const handleReply = async () => {
-    console.log(comment);
-
     if (!replyText.trim()) return;
     try {
-      console.log("commitid",comment._id);
-
-      await dispatch(addReply({ postId, commentId: comment.comment_id, replyText })).unwrap();
+      await dispatch(addReply({ 
+        postId, 
+        commentId: comment.comment_id, // Use comment_id here
+        replyText 
+      })).unwrap();
       
       setReplyText("");
       setOpenReplies(true);
@@ -32,7 +29,12 @@ const Comment = ({ comment, postId, darkMode }) => {
   const handleUpdateReply = async (replyId) => {
     if (!editingReply?.text.trim()) return;
     try {
-      await dispatch(updateReply({ postId, commentId: comment._id, replyId, replyText: editingReply.text })).unwrap();
+      await dispatch(updateReply({ 
+        postId, 
+        commentId: comment.comment_id, // Use comment_id here as well
+        replyId, 
+        reply_text: editingReply.text  // Ensure this key is correct per API expectation
+      })).unwrap();
       setEditingReply(null);
     } catch (error) {
       console.error("Error updating reply:", error);
@@ -58,7 +60,7 @@ const Comment = ({ comment, postId, darkMode }) => {
                 key={reply._id}
                 reply={reply}
                 postId={postId}
-                commentId={comment._id}
+                commentId={comment.comment_id}  // Changed here for consistency
                 darkMode={darkMode}
                 editingReply={editingReply}
                 setEditingReply={setEditingReply}

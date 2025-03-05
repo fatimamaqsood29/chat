@@ -1,4 +1,4 @@
-import { Avatar, Box, Button, Typography } from "@mui/material";
+import { Avatar, Box, Button, Typography, IconButton } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -8,10 +8,18 @@ import {
   setCurrentChatroom,
   createChatroom,
 } from '../../features/chatSlice';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate'; // For story upload icon
 
-export const ProfileHeader = ({ profileData, userId, isOwnProfile, loggedInUserId }) => {
+export const ProfileHeader = ({
+  profileData,
+  userId,
+  isOwnProfile,
+  loggedInUserId,
+  onStoryUpload,
+  stories,
+  onDeleteStory,
+}) => {
   const dispatch = useDispatch();
-
   const navigate = useNavigate();
   const [isFollowing, setIsFollowing] = useState(false);
 
@@ -36,10 +44,10 @@ export const ProfileHeader = ({ profileData, userId, isOwnProfile, loggedInUserI
           setIsFollowing(true);
           return;
         }
-      })
+      });
       // checkFollowStatus();
     }
-  }, []);
+  }, [profileData, loggedInUserId, isOwnProfile, userId]);
 
   const handleCreateChatroom = async (participantId) => {
     try {
@@ -88,6 +96,7 @@ export const ProfileHeader = ({ profileData, userId, isOwnProfile, loggedInUserI
       toast.error("Failed to follow/unfollow user. Please try again.");
     }
   };
+
   const handleMessageInteraction = () => {
     if (isFollowing) {
       handleCreateChatroom(userId);
@@ -95,64 +104,125 @@ export const ProfileHeader = ({ profileData, userId, isOwnProfile, loggedInUserI
     } else {
       toast.error("You must follow this user to send a message.");
     }
-  }
+  };
 
   return (
-    <Box display="flex" alignItems="center" justifyContent="space-between">
-      <Box display="flex" alignItems="center" gap={3}>
-        <Avatar
-          src={profileData.profileImage}
-          alt={profileData.name}
-          sx={{ width: 80, height: 80 }}
-        />
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: "bold" }}>
-            {profileData.name}
-          </Typography>
-          <Typography variant="body1">{profileData.bio}</Typography>
+    <Box display="flex" flexDirection="column" gap={3}>
+      {/* Profile Info Section */}
+      <Box display="flex" alignItems="center" justifyContent="space-between">
+        <Box display="flex" alignItems="center" gap={3}>
+          {/* Profile Picture with Story Upload */}
+          <Box position="relative">
+            <Avatar
+              src={profileData.profileImage}
+              alt={profileData.name}
+              sx={{ width: 80, height: 80 }}
+            />
+            {isOwnProfile && (
+              <IconButton
+                component="label"
+                sx={{
+                  position: "absolute",
+                  bottom: 0,
+                  right: 0,
+                  backgroundColor: "primary.main",
+                  color: "white",
+                  "&:hover": { backgroundColor: "primary.dark" },
+                }}
+              >
+                <AddPhotoAlternateIcon />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={onStoryUpload}
+                  style={{ display: "none" }}
+                />
+              </IconButton>
+            )}
+          </Box>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+              {profileData.name}
+            </Typography>
+            <Typography variant="body1">{profileData.bio}</Typography>
+          </Box>
         </Box>
+
+        {/* Buttons Section */}
+        {isOwnProfile ? (
+          <Button
+            variant="outlined"
+            onClick={() =>
+              navigate("/edit-profile", { state: { profileData, userId } })
+            }
+          >
+            Edit Profile
+          </Button>
+        ) : (
+          <Box display="flex" gap={2}>
+            {/* Follow/Unfollow Button */}
+            <Button
+              variant={isFollowing ? "outlined" : "contained"}
+              color={isFollowing ? "secondary" : "primary"}
+              onClick={handleFollow}
+              sx={{
+                textTransform: "none",
+                fontWeight: "bold",
+                width: "100px",
+              }}
+            >
+              {isFollowing ? "Following" : "Follow"}
+            </Button>
+
+            {/* Message Button */}
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleMessageInteraction}
+              sx={{
+                textTransform: "none",
+                fontWeight: "bold",
+              }}
+            >
+              Message
+            </Button>
+          </Box>
+        )}
       </Box>
 
-      {/* Buttons Section */}
-      {isOwnProfile ? (
-        <Button
-          variant="outlined"
-          onClick={() =>
-            navigate("/edit-profile", { state: { profileData, userId } })
-          }
-        >
-          Edit Profile
-        </Button>
-      ) : (
-        <Box display="flex" gap={2}>
-          {/* Follow/Unfollow Button */}
-          <Button
-            variant={isFollowing ? "outlined" : "contained"}
-            color={isFollowing ? "secondary" : "primary"}
-            onClick={handleFollow}
-            sx={{
-              textTransform: "none",
-              fontWeight: "bold",
-              width: "100px",
-            }}
+      {/* Stories Section */}
+      <Box display="flex" gap={2} overflow="auto" py={2}>
+        {stories.map((story) => (
+          <Box
+            key={story._id}
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            gap={1}
+            sx={{ cursor: "pointer" }}
+            onClick={() => navigate(`/stories/${story.user._id}`)}
           >
-            {isFollowing ? "Following" : "Follow"}
-          </Button>
-
-          {/* Message Button */}
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleMessageInteraction}
-            sx={{
-              textTransform: "none",
-              fontWeight: "bold",
-            }}
-          >
-            Message
-          </Button>
-        </Box>
-      )}
+            <Avatar
+              src={story.imageUrl}
+              alt="Story"
+              sx={{ width: 60, height: 60, border: "2px solid", borderColor: "primary.main" }}
+            />
+            {isOwnProfile && (
+              <Button
+                variant="text"
+                color="error"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent story navigation
+                  onDeleteStory(story._id);
+                }}
+              >
+                Delete
+              </Button>
+            )}
+          </Box>
+        ))}
+      </Box>
     </Box>
   );
 };

@@ -4,19 +4,24 @@ import { fetchPosts } from "../features/postSlice";
 import { fetchSuggestions } from "../features/followSlice";
 import { useThemeContext } from "../ThemeContext";
 import Post from "../components/home/Post";
+import Stories from "../components/home/Stories"; // Import the Stories component
+import { fetchFollowingStories } from "../features/storySlice"; // Import story action
 
 const Home = () => {
   const { darkMode } = useThemeContext();
   const dispatch = useDispatch();
-  
+
   const posts = useSelector((state) => state.post.posts);
   const suggestions = useSelector((state) => state.follow.suggestions);
+  const stories = useSelector((state) => state.story.stories); // Get stories from Redux store
   const postsLoading = useSelector((state) => state.post.loading);
   const suggestionsLoading = useSelector((state) => state.follow.loading);
-  
+  const storiesLoading = useSelector((state) => state.story.loading); // Get stories loading state
+
   useEffect(() => {
     dispatch(fetchPosts()); // Fetch posts
     dispatch(fetchSuggestions()); // Fetch suggestions
+    dispatch(fetchFollowingStories()); // Fetch stories
   }, [dispatch]);
 
   return (
@@ -25,24 +30,7 @@ const Home = () => {
         <div className="flex gap-4">
           <div className="flex-1">
             {/* Stories Section */}
-            <div className={`${darkMode ? "bg-neutral-900" : "bg-white"} border ${darkMode ? "border-neutral-800" : "border-gray-200"} rounded-lg p-4 mb-6`}>
-              <div className="flex gap-4 overflow-x-auto pb-2">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="flex flex-col items-center flex-shrink-0">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-400 to-pink-600 p-0.5">
-                      <div className="bg-white rounded-full p-0.5">
-                        <img
-                          src={`https://i.pravatar.cc/100?img=${i + 1}`}
-                          alt="Story"
-                          className="w-full h-full rounded-full"
-                        />
-                      </div>
-                    </div>
-                    <span className="text-xs mt-1">user_{i + 1}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <Stories darkMode={darkMode} stories={stories} loading={storiesLoading} />
 
             {/* Posts Section */}
             {postsLoading ? (
@@ -70,7 +58,9 @@ const Home = () => {
                   alt="Your avatar"
                 />
                 <div className="ml-4">
-                  <p className="font-semibold text-sm text-gray-900 dark:text-gray-100">your_username</p>
+                  <p className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+                    your_username
+                  </p>
                   <p className="text-xs text-gray-500">Your Name</p>
                 </div>
               </div>
@@ -94,11 +84,15 @@ const Home = () => {
                           alt={user.name}
                         />
                         <div className="ml-3">
-                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user.name}</p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            {user.name}
+                          </p>
                           <p className="text-xs text-gray-500">Suggested for you</p>
                         </div>
                       </div>
-                      <button className="text-blue-500 text-xs font-semibold">Follow</button>
+                      <button className="text-blue-500 text-xs font-semibold">
+                        Follow
+                      </button>
                     </div>
                   ))
                 ) : (
