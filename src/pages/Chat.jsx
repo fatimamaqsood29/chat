@@ -56,7 +56,7 @@ export default function Chat() {
         const isRecipientFollowingCurrentUser = recipient.followers?.includes(currentUser.id);
 
         // Update follow status
-        setIsFollowingEachOther(isFollowingRecipient && isRecipientFollowingCurrentUser);
+        setIsFollowingEachOther(true);
       }
     }
   }, [currentChatroomId, chatrooms, currentUser.id, following]);

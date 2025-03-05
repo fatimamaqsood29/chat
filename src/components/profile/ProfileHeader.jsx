@@ -2,9 +2,16 @@ import { Avatar, Box, Button, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useDispatch } from 'react-redux';
 import { useState, useEffect } from "react";
+import {
+  setCurrentChatroom,
+  createChatroom,
+} from '../../features/chatSlice';
 
-export const ProfileHeader = ({ profileData, userId, isOwnProfile }) => {
+export const ProfileHeader = ({ profileData, userId, isOwnProfile, loggedInUserId }) => {
+  const dispatch = useDispatch();
+
   const navigate = useNavigate();
   const [isFollowing, setIsFollowing] = useState(false);
 
@@ -24,9 +31,29 @@ export const ProfileHeader = ({ profileData, userId, isOwnProfile }) => {
     };
 
     if (!isOwnProfile) {
-      checkFollowStatus();
+      profileData?.followers?.map(followerId => {
+        if (followerId == loggedInUserId) {
+          setIsFollowing(true);
+          return;
+        }
+      })
+      // checkFollowStatus();
     }
-  }, [userId, isOwnProfile]);
+  }, []);
+
+  const handleCreateChatroom = async (participantId) => {
+    try {
+      const result = await dispatch(createChatroom(participantId)).unwrap();
+      if (result.chatroom_id) {
+        toast.success('Chatroom created successfully');
+        dispatch(setCurrentChatroom(result.chatroom_id));
+      } else {
+        toast.error(result.message || 'Failed to create chatroom');
+      }
+    } catch (error) {
+      toast.error('Failed to create chatroom');
+    }
+  };
 
   // Handle follow/unfollow action
   const handleFollow = async () => {
@@ -61,6 +88,14 @@ export const ProfileHeader = ({ profileData, userId, isOwnProfile }) => {
       toast.error("Failed to follow/unfollow user. Please try again.");
     }
   };
+  const handleMessageInteraction = () => {
+    if (isFollowing) {
+      handleCreateChatroom(userId);
+      // navigate(`/chat/${userId}`)
+    } else {
+      toast.error("You must follow this user to send a message.");
+    }
+  }
 
   return (
     <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -108,7 +143,7 @@ export const ProfileHeader = ({ profileData, userId, isOwnProfile }) => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => navigate(`/chat/${userId}`)}
+            onClick={handleMessageInteraction}
             sx={{
               textTransform: "none",
               fontWeight: "bold",

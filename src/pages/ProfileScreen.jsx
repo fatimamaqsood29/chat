@@ -45,7 +45,7 @@ function ProfileScreen() {
   useEffect(() => {
     if (location.state?.profileData) {
       const { name, bio, profileImage, followers, following } = location.state.profileData;
-      setProfileData({ name, bio, profileImage });
+      setProfileData(location.state.profileData);
       if (followers) setProfileFollowers(followers);
       if (following) setProfileFollowing(following);
       localStorage.setItem("profile_name", name);
@@ -75,7 +75,7 @@ function ProfileScreen() {
           bio: userData.bio || "",
           profileImage: userData.profile_picture || "/default-avatar.png",
         };
-        setProfileData(updatedData);
+        setProfileData(userData);
         setProfileFollowers(userData.followers || []);
         setProfileFollowing(userData.following || []);
         localStorage.setItem("profile_name", updatedData.name);
@@ -156,7 +156,7 @@ function ProfileScreen() {
   return (
     <Box sx={{ p: 4 }}>
       <ToastContainer />
-      <ProfileHeader profileData={profileData} userId={userId} isOwnProfile={isOwnProfile} />
+      <ProfileHeader profileData={profileData} userId={userId} isOwnProfile={isOwnProfile} loggedInUserId={loggedInUserId} />
       <ProfileStats
         totalPosts={totalPosts}
         followersCount={profileFollowers.length}

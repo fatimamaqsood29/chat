@@ -3,23 +3,25 @@ import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// Helper function to get the token
+const getAuthToken = () => {
+  const token = localStorage.getItem("access_token");
+  if (!token) throw new Error("Authentication token is missing.");
+  return token;
+};
+
 // Create Post
 export const createPost = createAsyncThunk(
   "posts/createPost",
   async (formData, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) throw new Error("Authentication token is missing.");
-      const response = await axios.post(
-        `${API_BASE_URL}/api/posts/posts`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const token = getAuthToken();
+      const response = await axios.post(`${API_BASE_URL}/api/posts/posts`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Failed to create post");
@@ -32,16 +34,12 @@ export const fetchPosts = createAsyncThunk(
   "posts/fetchPosts",
   async (_, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) throw new Error("Authentication token is missing.");
-      const response = await axios.get(
-        `${API_BASE_URL}/api/posts/posts/random`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const token = getAuthToken();
+      const response = await axios.get(`${API_BASE_URL}/api/posts/posts/random`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Failed to fetch posts");
@@ -54,8 +52,7 @@ export const likePost = createAsyncThunk(
   "posts/likePost",
   async (postId, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) throw new Error("Authentication token is missing.");
+      const token = getAuthToken();
       const response = await axios.post(
         `${API_BASE_URL}/api/posts/posts/${postId}/like`,
         {},
@@ -77,8 +74,7 @@ export const addComment = createAsyncThunk(
   "posts/addComment",
   async ({ postId, commentText }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) throw new Error("Authentication token is missing.");
+      const token = getAuthToken();
       const response = await axios.post(
         `${API_BASE_URL}/api/posts/posts/${postId}/comment`,
         { comment_text: commentText },
@@ -95,14 +91,14 @@ export const addComment = createAsyncThunk(
     }
   }
 );
+
+// Add Reply
 export const addReply = createAsyncThunk(
   "posts/addReply",
   async ({ postId, commentId, replyText }, { rejectWithValue }) => {
     try {
-      console.log("Post ID:", postId); // Debugging
-      console.log("Comment ID:", commentId); // Debugging
-      const token = localStorage.getItem("access_token");
-      if (!token) throw new Error("Authentication token is missing.");
+      if (!commentId) throw new Error("Comment ID is missing.");
+      const token = getAuthToken();
       const response = await axios.post(
         `${API_BASE_URL}/api/posts/posts/${postId}/comments/${commentId}/reply`,
         { reply_text: replyText },
@@ -119,42 +115,13 @@ export const addReply = createAsyncThunk(
     }
   }
 );
-// export const addReply = createAsyncThunk(
-//   "posts/addReply",
-//   async ({ postId, commentId, replyText }, { rejectWithValue }) => {
-//     try {
-//       console.log("Post ID:", postId); // Debugging
-//       console.log("Comment ID:", commentId); // Debugging
-
-//       if (!commentId) throw new Error("Comment ID is missing.");
-
-//       const token = localStorage.getItem("access_token");
-//       if (!token) throw new Error("Authentication token is missing.");
-
-//       const response = await axios.post(
-//         `${API_BASE_URL}/api/posts/posts/${postId}/comments/${commentId}/reply`,
-//         { reply_text: replyText },
-//         {
-//           headers: {
-//             Authorization: `Bearer ${token}`,
-//             "Content-Type": "application/json",
-//           },
-//         }
-//       );
-//       return response.data;
-//     } catch (error) {
-//       return rejectWithValue(error.response?.data?.message || "Failed to add reply");
-//     }
-//   }
-// );
 
 // Update Reply
 export const updateReply = createAsyncThunk(
   "posts/updateReply",
   async ({ postId, commentId, replyId, replyText }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) throw new Error("Authentication token is missing.");
+      const token = getAuthToken();
       const response = await axios.put(
         `${API_BASE_URL}/api/posts/posts/${postId}/comments/${commentId}/replies/${replyId}`,
         { reply_text: replyText },
@@ -249,6 +216,7 @@ const postSlice = createSlice({
         state.loading = false;
         const post = state.posts.find((p) => p._id === action.payload.postId);
         if (post) {
+          if (!post.comments) post.comments = [];
           post.comments.unshift(action.payload.comment);
         }
       })
@@ -269,7 +237,7 @@ const postSlice = createSlice({
           const comment = post.comments.find((c) => c._id === commentId);
           if (comment) {
             if (!comment.replies) comment.replies = [];
-            comment.replies.push(reply);
+            comment.replies.unshift(reply); // Use unshift to add to the beginning
           }
         }
       })
