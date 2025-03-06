@@ -4,23 +4,24 @@ import { fetchPosts } from "../features/postSlice";
 import { fetchSuggestions } from "../features/followSlice";
 import { useThemeContext } from "../ThemeContext";
 import Post from "../components/home/Post";
-import Stories from "../components/home/Stories"; // Import the Stories component
-import { fetchFollowingStories } from "../features/storySlice"; // Import story action
+import Stories from "../components/home/Stories"; // Import Stories component
+import { fetchFollowingStories } from "../features/storySlice"; // Import action for stories
 
 const Home = () => {
   const { darkMode } = useThemeContext();
   const dispatch = useDispatch();
 
+  // Fetching data from Redux store
   const posts = useSelector((state) => state.post.posts);
   const suggestions = useSelector((state) => state.follow.suggestions);
-  const stories = useSelector((state) => state.story.stories); // Get stories from Redux store
+  const stories = useSelector((state) => state.story.stories); // Get stories from Redux
   const postsLoading = useSelector((state) => state.post.loading);
   const suggestionsLoading = useSelector((state) => state.follow.loading);
-  const storiesLoading = useSelector((state) => state.story.loading); // Get stories loading state
+  const storiesLoading = useSelector((state) => state.story.loading); // Stories loading state
 
   useEffect(() => {
     dispatch(fetchPosts()); // Fetch posts
-    dispatch(fetchSuggestions()); // Fetch suggestions
+    dispatch(fetchSuggestions()); // Fetch suggested users
     dispatch(fetchFollowingStories()); // Fetch stories
   }, [dispatch]);
 

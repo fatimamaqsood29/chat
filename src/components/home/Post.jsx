@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { likePost, addComment } from "../../features/postSlice";
-import { HeartIcon, ChatBubbleOvalLeftIcon, PaperAirplaneIcon, BookmarkIcon } from "@heroicons/react/24/outline";
+import {
+  HeartIcon,
+  ChatBubbleOvalLeftIcon,
+  PaperAirplaneIcon,
+  BookmarkIcon,
+} from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import Comment from "./Comment";
 
@@ -29,15 +34,24 @@ const Post = ({ post, darkMode }) => {
   };
 
   return (
-    <div className={`${darkMode ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-200"} rounded-lg border mb-6`}>
+    <div
+      className={`${
+        darkMode ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-200"
+      } rounded-lg border mb-6`}
+    >
       {/* Post Header */}
       <div className="flex items-center p-4">
         <img
-          src={post.user_profile_picture || `https://i.pravatar.cc/40?img=${post.userId}`}
+          src={
+            post.user_profile_picture ||
+            `https://i.pravatar.cc/40?img=${post.user_id?.slice(-2)}` // Random avatar for users without profile pic
+          }
           alt="Avatar"
-          className="w-8 h-8 rounded-full"
+          className="w-8 h-8 rounded-full object-cover"
         />
-        <span className="ml-3 font-semibold">{post.user_name || "user_" + post.userId}</span>
+        <span className="ml-3 font-semibold">
+          {post.user_name || `user_${post.user_id?.slice(-4)}`}
+        </span>
       </div>
 
       {/* Post Image */}
@@ -48,7 +62,11 @@ const Post = ({ post, darkMode }) => {
         <div className="flex justify-between items-center mb-4">
           <div className="flex gap-4">
             <button onClick={() => handleLike(post._id)} className="hover:opacity-50 transition-opacity">
-              {post.is_liked ? <HeartSolidIcon className="w-7 h-7 text-red-500" /> : <HeartIcon className="w-7 h-7" />}
+              {post.is_liked ? (
+                <HeartSolidIcon className="w-7 h-7 text-red-500" />
+              ) : (
+                <HeartIcon className="w-7 h-7" />
+              )}
             </button>
             <button onClick={() => setOpenComments(!openComments)}>
               <ChatBubbleOvalLeftIcon className="w-7 h-7" />
@@ -59,12 +77,16 @@ const Post = ({ post, darkMode }) => {
         </div>
 
         {/* Likes Count */}
-        <p className="font-semibold mb-1">{post.likes_count || post.likes?.length || 0} likes</p>
+        <p className="font-semibold mb-1">
+          {post.likes_count !== undefined ? post.likes_count : post.likes?.length || 0} likes
+        </p>
 
         {/* Caption */}
-        <p className="text-sm">
-          <span className="font-semibold">{post.user_name}</span> {post.caption}
-        </p>
+        {post.caption && (
+          <p className="text-sm">
+            <span className="font-semibold">{post.user_name}</span> {post.caption}
+          </p>
+        )}
 
         {/* Comments Section */}
         {openComments && (
@@ -82,12 +104,16 @@ const Post = ({ post, darkMode }) => {
                   placeholder="Add a comment..."
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
-                  className={`flex-1 bg-transparent text-sm focus:outline-none ${darkMode ? "placeholder-gray-500" : "placeholder-gray-400"}`}
+                  className={`flex-1 bg-transparent text-sm focus:outline-none ${
+                    darkMode ? "placeholder-gray-500" : "placeholder-gray-400"
+                  }`}
                   onKeyPress={(e) => e.key === "Enter" && handleComment(post._id)}
                 />
                 <button
                   onClick={() => handleComment(post._id)}
-                  className={`text-sm font-semibold ${commentText.trim() ? "text-blue-500" : "text-blue-300"}`}
+                  className={`text-sm font-semibold ${
+                    commentText.trim() ? "text-blue-500" : "text-blue-300"
+                  }`}
                 >
                   Post
                 </button>

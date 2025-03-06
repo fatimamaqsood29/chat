@@ -26,14 +26,6 @@ export const ProfileHeader = ({
   // Retrieve userId from localStorage if not passed as a prop
   const userId = propUserId || localStorage.getItem("user_id") || JSON.parse(localStorage.getItem("user"))?.id;
 
-  // Debugging: Log the userId and localStorage data
-  console.log({
-    propUserId,
-    localStorageUserId: localStorage.getItem("user_id"),
-    parsedUser: JSON.parse(localStorage.getItem("user")),
-    finalUserId: userId
-  });
-
   // Fetch stories for the logged-in user
   const fetchStories = async () => {
     try {
@@ -64,19 +56,6 @@ export const ProfileHeader = ({
 
   // Check the follow status only if viewing someone else's profile
   useEffect(() => {
-    const checkFollowStatus = async () => {
-      try {
-        const token = localStorage.getItem("access_token");
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/users/is-following/${userId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setIsFollowing(response.data.isFollowing);
-      } catch (error) {
-        console.error("Error checking follow status:", error);
-      }
-    };
-
     if (!isOwnProfile) {
       profileData?.followers?.forEach(followerId => {
         if (followerId === loggedInUserId) {
@@ -84,7 +63,6 @@ export const ProfileHeader = ({
           return;
         }
       });
-      // checkFollowStatus();
     }
   }, [profileData, loggedInUserId, isOwnProfile, userId]);
 
@@ -139,7 +117,6 @@ export const ProfileHeader = ({
   const handleMessageInteraction = () => {
     if (isFollowing) {
       handleCreateChatroom(userId);
-      // navigate(`/chat/${userId}`)
     } else {
       toast.error("You must follow this user to send a message.");
     }
@@ -167,9 +144,10 @@ export const ProfileHeader = ({
                   backgroundColor: "primary.main",
                   color: "white",
                   "&:hover": { backgroundColor: "primary.dark" },
+                  p: 0.5, // Reduced padding for a smaller button
                 }}
               >
-                <AddPhotoAlternateIcon />
+                <AddPhotoAlternateIcon sx={{ fontSize: 18 }} /> {/* Reduced icon size */}
                 <input
                   type="file"
                   accept="image/*"

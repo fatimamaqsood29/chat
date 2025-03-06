@@ -11,20 +11,12 @@ const StoryViewer = () => {
   const token = localStorage.getItem('access_token');
 
   // Get userId from URL params, localStorage, or parsed user object
-  const userId = urlUserId && urlUserId !== "undefined" 
-    ? urlUserId 
-    : localStorage.getItem("user_id") || JSON.parse(localStorage.getItem("user"))?.id;
-
-  // Debugging logs
-  console.log({
-    urlUserId,
-    localStorageUserId: localStorage.getItem("user_id"),
-    parsedUser: JSON.parse(localStorage.getItem("user")),
-    finalUserId: userId
-  });
+  const storedUserId = localStorage.getItem("user_id");
+  const parsedUser = JSON.parse(localStorage.getItem("user"));
+  const userId = urlUserId && urlUserId !== "undefined" ? urlUserId : storedUserId || parsedUser?.id;
 
   useEffect(() => {
-    if (!userId || userId === "undefined") { // Explicit check
+    if (!userId || userId === "undefined") {
       toast.error("Invalid user ID. Redirecting...");
       navigate("/home");
       return;
@@ -32,13 +24,19 @@ const StoryViewer = () => {
 
     const fetchStories = async () => {
       try {
-        const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/posts/stories/${userId}`;
-        console.log("Fetching stories from:", apiUrl);
+        let apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/posts/stories/${userId}`;
         
+        // If viewing own stories, use `/stories/me`
+        if (userId === storedUserId) {
+          apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/posts/stories/me`;
+        }
+
+        console.log("Fetching stories from:", apiUrl);
+
         const response = await axios.get(apiUrl, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        
+
         console.log("Stories fetched:", response.data);
         setStories(response.data);
       } catch (error) {
@@ -76,7 +74,7 @@ const StoryViewer = () => {
       <Toaster position="top-right" />
       <div className="relative max-w-2xl w-full">
         <img
-          src={stories[currentIndex].imageUrl}
+          src={stories[currentIndex].image_url} // Fixed property name
           alt="Story"
           className="max-h-screen object-contain"
         />
