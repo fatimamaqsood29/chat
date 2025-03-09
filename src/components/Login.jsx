@@ -9,8 +9,8 @@ import { TextField, Button, Typography, Box, Paper } from '@mui/material';
 import { useThemeContext } from '../ThemeContext';
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../features/authSlice';
+
 const loginSchema = z.object({
-  
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
@@ -21,12 +21,11 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
   });
   const dispatch = useDispatch();
-
   const { darkMode } = useThemeContext();
 
   const onSubmit = async (data) => {
     toast.loading('Logging in...');
-  
+
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/login`, {
         method: 'POST',
@@ -35,18 +34,17 @@ export default function Login() {
         },
         body: JSON.stringify(data),
       });
-  
+
       const result = await response.json();
-      console.log('API Response:', result); // Debugging line
-  
+      console.log('API Response:', result); // Debugging
+
       toast.dismiss();
-  
+
       if (response.ok) {
         const token = result.access_token;
-  
+
         if (token) {
-          //localStorage.setItem('accessToken', token); // Store the correct token
-          dispatch(loginSuccess( {user: result.user, access_token: result.access_token}))
+          dispatch(loginSuccess({ user: result.user, access_token: result.access_token }));
           toast.success('Logged in successfully!');
           navigate('/home');
         } else {
@@ -60,7 +58,7 @@ export default function Login() {
       toast.error('An error occurred. Please try again.');
     }
   };
-  
+
   return (
     <Box
       display="flex"

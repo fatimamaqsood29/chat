@@ -1,91 +1,114 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { Toaster, toast } from 'react-hot-toast';
+import React, { useEffect, useState } from 'react';
 
-const StoryViewer = () => {
-  const { userId: urlUserId } = useParams(); // Rename to avoid conflict
-  const navigate = useNavigate();
-  const [stories, setStories] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const token = localStorage.getItem('access_token');
+const StoryViewer = ({ stories, initialIndex, onClose }) => {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [progress, setProgress] = useState(0);
 
-  // Get userId from URL params, localStorage, or parsed user object
-  const storedUserId = localStorage.getItem("user_id");
-  const parsedUser = JSON.parse(localStorage.getItem("user"));
-  const userId = urlUserId && urlUserId !== "undefined" ? urlUserId : storedUserId || parsedUser?.id;
+  const currentStory = stories[currentIndex];
 
+  // Handle story progress
   useEffect(() => {
-    if (!userId || userId === "undefined") {
-      toast.error("Invalid user ID. Redirecting...");
-      navigate("/home");
-      return;
-    }
-
-    const fetchStories = async () => {
-      try {
-        let apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/posts/stories/${userId}`;
-        
-        // If viewing own stories, use `/stories/me`
-        if (userId === storedUserId) {
-          apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/posts/stories/me`;
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          goToNextStory(); // Move to the next story when progress completes
+          return 0;
         }
+        return prev + 1;
+      });
+    }, 30); // Adjust the interval for smoother progress
 
-        console.log("Fetching stories from:", apiUrl);
+    return () => clearInterval(interval);
+  }, [currentIndex]);
 
-        const response = await axios.get(apiUrl, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        console.log("Stories fetched:", response.data);
-        setStories(response.data);
-      } catch (error) {
-        console.error("Error fetching stories:", error.response || error);
-        if (error.response?.status === 405) {
-          toast.error("The server does not support this request method.");
-        } else {
-          toast.error("Failed to load stories.");
-        }
-        navigate("/home");
-      }
-    };
-
-    fetchStories();
-  }, [userId, token, navigate]);
-
-  const handleNext = () => {
+  // Navigate to the next story
+  const goToNextStory = () => {
     if (currentIndex < stories.length - 1) {
       setCurrentIndex(currentIndex + 1);
+      setProgress(0); // Reset progress for the next story
     } else {
-      navigate("/home");
+      onClose(); // Close the viewer if there are no more stories
     }
   };
 
-  const handlePrev = () => {
+  // Navigate to the previous story
+  const goToPreviousStory = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
+      setProgress(0); // Reset progress for the previous story
     }
   };
 
-  if (!stories.length) return <div>No stories available.</div>;
+  // Handle swipe gestures
+  const handleSwipe = (event) => {
+    const touchStartX = event.touches[0].clientX;
+    const touchEndX = (event.changedTouches || event.touches)[0].clientX;
+
+    const deltaX = touchEndX - touchStartX;
+
+    if (deltaX > 50) {
+      goToPreviousStory(); // Swipe right to go to the previous story
+    } else if (deltaX < -50) {
+      goToNextStory(); // Swipe left to go to the next story
+    }
+  };
 
   return (
-    <div className="fixed inset-0 bg-black flex items-center justify-center">
-      <Toaster position="top-right" />
+    <div
+      className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
+      onTouchStart={handleSwipe}
+      onTouchEnd={handleSwipe}
+    >
       <div className="relative max-w-2xl w-full">
+        {/* Progress Bar */}
+        <div className="absolute top-4 left-4 right-4 h-1 bg-gray-700 rounded-full">
+          <div
+            className="h-1 bg-white rounded-full"
+            style={{ width: `${progress}%` }}
+          ></div>
+        </div>
+
+        {/* Story Image */}
         <img
-          src={stories[currentIndex].image_url} // Fixed property name
+          src={currentStory.image_url}
           alt="Story"
           className="max-h-screen object-contain"
         />
-        <div className="absolute top-0 left-0 right-0 flex justify-between p-4">
-          <button onClick={handlePrev} className="text-white text-2xl">
-            ←
-          </button>
-          <button onClick={handleNext} className="text-white text-2xl">
-            →
-          </button>
+
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-white text-2xl"
+        >
+          &times;
+        </button>
+
+        {/* User Info */}
+        <div className="absolute top-8 left-4 flex items-center">
+          <img
+            src={currentStory.user_profile_picture || "/default-avatar.png"}
+            alt="User"
+            className="w-8 h-8 rounded-full"
+          />
+          <span className="ml-2 text-white font-semibold">
+            {currentStory.user_name}
+          </span>
         </div>
+
+        {/* Navigation Buttons */}
+        <button
+          onClick={goToPreviousStory}
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white text-2xl"
+        >
+          &#10094;
+        </button>
+        <button
+          onClick={goToNextStory}
+          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white text-2xl"
+        >
+          &#10095;
+        </button>
       </div>
     </div>
   );

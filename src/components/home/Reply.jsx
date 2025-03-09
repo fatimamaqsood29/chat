@@ -23,7 +23,7 @@ const Reply = ({ reply, postId, commentId, darkMode, editingReply, setEditingRep
             onClick={() => handleUpdateReply(postId, commentId, reply._id, editingReply.text)}
             className="ml-2 text-blue-500 text-xs hover:underline"
           >
-            Save
+            edit
           </button>
         </>
       ) : (
