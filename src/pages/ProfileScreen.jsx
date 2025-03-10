@@ -6,7 +6,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Box } from '@mui/material';
 import {
   ProfileHeader,
-  ProfileStats,
   TabsSection,
   PostsGrid,
   FollowDialog,
@@ -38,7 +37,7 @@ function ProfileScreen() {
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogType, setDialogType] = useState('');
 
-  const { stories, loading: storiesLoading, error: storiesError } = useSelector((state) => state.story);
+  const { stories } = useSelector((state) => state.story);
 
   useEffect(() => {
     if (!loggedInUserId || !token) {
@@ -61,7 +60,7 @@ function ProfileScreen() {
     }
     fetchUserPosts();
     dispatch(fetchFollowingStories());
-  }, [userId, location.key]);
+  }, [userId, location.key, dispatch]);
 
   const fetchProfileData = async () => {
     try {
@@ -144,7 +143,7 @@ function ProfileScreen() {
     try {
       await dispatch(deleteStory(storyId)).unwrap();
       toast.success('Story deleted successfully!');
-      dispatch(fetchFollowingStories()); 
+      dispatch(fetchFollowingStories());
     } catch (error) {
       toast.error('Failed to delete story');
     }
@@ -205,19 +204,27 @@ function ProfileScreen() {
         isOwnProfile={isOwnProfile}
         loggedInUserId={loggedInUserId}
         onStoryUpload={handleStoryUpload}
-        onDeleteStory={handleDeleteStory} 
-        stories={stories}
-      />
-      <ProfileStats
+        onDeleteStory={handleDeleteStory}
         totalPosts={totalPosts}
         followersCount={profileFollowers.length}
         followingCount={profileFollowing.length}
         onStatClick={handleOpenDialog}
       />
-      <TabsSection selectedTab={selectedTab} onTabChange={(e, newValue) => setSelectedTab(newValue)} />
-      {selectedTab === 'post' && <PostsGrid uploadedImages={uploadedImages} fetchPosts={fetchUserPosts} />}
+      <TabsSection
+        selectedTab={selectedTab}
+        onTabChange={(e, newValue) => setSelectedTab(newValue)}
+      />
+      {selectedTab === 'post' && (
+        <PostsGrid uploadedImages={uploadedImages} fetchPosts={fetchUserPosts} />
+      )}
       {isOwnProfile && <Highlights userId={userId} token={token} />}
-      <FollowDialog open={openDialog} type={dialogType} onClose={handleCloseDialog} followers={profileFollowers} following={profileFollowing} />
+      <FollowDialog
+        open={openDialog}
+        type={dialogType}
+        onClose={handleCloseDialog}
+        followers={profileFollowers}
+        following={profileFollowing}
+      />
     </Box>
   );
 }
