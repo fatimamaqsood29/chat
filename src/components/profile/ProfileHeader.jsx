@@ -2,13 +2,10 @@ import { Avatar, Box, Button, Typography, IconButton } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useDispatch } from 'react-redux';
+import { useDispatch } from "react-redux";
 import { useState, useEffect } from "react";
-import {
-  setCurrentChatroom,
-  createChatroom,
-} from '../../features/chatSlice';
-import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate'; // For story upload icon
+import { setCurrentChatroom, createChatroom } from "../../features/chatSlice";
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate"; // For story upload icon
 
 export const ProfileHeader = ({
   profileData,
@@ -24,7 +21,10 @@ export const ProfileHeader = ({
   const [stories, setStories] = useState([]);
 
   // Retrieve userId from localStorage if not passed as a prop
-  const userId = propUserId || localStorage.getItem("user_id") || JSON.parse(localStorage.getItem("user"))?.id;
+  const userId =
+    propUserId ||
+    localStorage.getItem("user_id") ||
+    JSON.parse(localStorage.getItem("user"))?.id;
 
   // Fetch stories for the logged-in user
   const fetchStories = async () => {
@@ -57,7 +57,7 @@ export const ProfileHeader = ({
   // Check the follow status only if viewing someone else's profile
   useEffect(() => {
     if (!isOwnProfile) {
-      profileData?.followers?.forEach(followerId => {
+      profileData?.followers?.forEach((followerId) => {
         if (followerId === loggedInUserId) {
           setIsFollowing(true);
           return;
@@ -70,13 +70,13 @@ export const ProfileHeader = ({
     try {
       const result = await dispatch(createChatroom(participantId)).unwrap();
       if (result.chatroom_id) {
-        toast.success('Chatroom created successfully');
+        toast.success("Chatroom created successfully");
         dispatch(setCurrentChatroom(result.chatroom_id));
       } else {
-        toast.error(result.message || 'Failed to create chatroom');
+        toast.error(result.message || "Failed to create chatroom");
       }
     } catch (error) {
-      toast.error('Failed to create chatroom');
+      toast.error("Failed to create chatroom");
     }
   };
 
@@ -119,6 +119,18 @@ export const ProfileHeader = ({
       handleCreateChatroom(userId);
     } else {
       toast.error("You must follow this user to send a message.");
+    }
+  };
+
+  // Handle story deletion
+  const handleDeleteStory = async (storyId) => {
+    try {
+      await onDeleteStory(storyId);
+      setStories((prevStories) => prevStories.filter((s) => s._id !== storyId)); // Remove deleted story
+      toast.success("Story deleted successfully");
+    } catch (error) {
+      console.error("Error deleting story:", error);
+      toast.error("Failed to delete story.");
     }
   };
 
@@ -221,15 +233,20 @@ export const ProfileHeader = ({
               if (story.user?._id) {
                 navigate(`/stories/${story.user._id}`);
               } else {
-                console.error('Story user ID is undefined:', story);
-                toast.error('Failed to load story. User ID is missing.');
+                console.error("Story user ID is undefined:", story);
+                toast.error("Failed to load story. User ID is missing.");
               }
             }}
           >
             <Avatar
               src={story.imageUrl}
               alt="Story"
-              sx={{ width: 60, height: 60, border: "2px solid", borderColor: "primary.main" }}
+              sx={{
+                width: 60,
+                height: 60,
+                border: "2px solid",
+                borderColor: "primary.main",
+              }}
             />
             {isOwnProfile && (
               <Button
@@ -237,8 +254,8 @@ export const ProfileHeader = ({
                 color="error"
                 size="small"
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent story navigation
-                  onDeleteStory(story._id);
+                  e.stopPropagation();
+                  handleDeleteStory(story._id);
                 }}
               >
                 Delete

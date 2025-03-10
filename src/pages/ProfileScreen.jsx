@@ -11,7 +11,7 @@ import {
   PostsGrid,
   FollowDialog,
 } from '../components/profile';
-import Highlights from '../components/profile/Highlights'; // Import the Highlights component
+import Highlights from '../components/profile/Highlights'; 
 import { useDispatch, useSelector } from 'react-redux';
 import { uploadStory, fetchFollowingStories, deleteStory } from '../features/storySlice';
 
@@ -40,7 +40,6 @@ function ProfileScreen() {
 
   const { stories, loading: storiesLoading, error: storiesError } = useSelector((state) => state.story);
 
-  // Redirect to login if user is not authenticated
   useEffect(() => {
     if (!loggedInUserId || !token) {
       toast.error('Please log in to view this profile.');
@@ -48,7 +47,6 @@ function ProfileScreen() {
     }
   }, [loggedInUserId, token, navigate]);
 
-  // Fetch profile data and stories
   useEffect(() => {
     if (location.state?.profileData) {
       const { name, bio, profileImage, followers, following } = location.state.profileData;
@@ -62,10 +60,9 @@ function ProfileScreen() {
       fetchProfileData();
     }
     fetchUserPosts();
-    dispatch(fetchFollowingStories()); // Fetch stories
+    dispatch(fetchFollowingStories());
   }, [userId, location.key]);
 
-  // Fetch profile data from the API
   const fetchProfileData = async () => {
     try {
       if (!token) {
@@ -97,7 +94,6 @@ function ProfileScreen() {
     }
   };
 
-  // Fetch user posts
   const fetchUserPosts = async () => {
     try {
       const response = await axios.get(
@@ -117,14 +113,12 @@ function ProfileScreen() {
     }
   };
 
-  // Handle story upload
   const handleStoryUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       try {
         const response = await dispatch(uploadStory(file)).unwrap();
         toast.success('Story uploaded successfully!');
-        // Add the uploaded story to highlights
         await handleAddHighlight(response.story_id, 'New Highlight');
       } catch (error) {
         toast.error('Failed to upload story');
@@ -132,7 +126,6 @@ function ProfileScreen() {
     }
   };
 
-  // Handle adding a story to highlights
   const handleAddHighlight = async (storyId, title) => {
     try {
       const response = await axios.post(
@@ -147,7 +140,16 @@ function ProfileScreen() {
     }
   };
 
-  // Open follow dialog (followers or following)
+  const handleDeleteStory = async (storyId) => {
+    try {
+      await dispatch(deleteStory(storyId)).unwrap();
+      toast.success('Story deleted successfully!');
+      dispatch(fetchFollowingStories()); 
+    } catch (error) {
+      toast.error('Failed to delete story');
+    }
+  };
+
   const handleOpenDialog = async (type) => {
     if (type === 'followers') {
       await fetchFollowers();
@@ -159,7 +161,6 @@ function ProfileScreen() {
     setOpenDialog(true);
   };
 
-  // Fetch followers
   const fetchFollowers = async () => {
     try {
       const response = await axios.get(
@@ -175,7 +176,6 @@ function ProfileScreen() {
     }
   };
 
-  // Fetch following
   const fetchFollowing = async () => {
     try {
       const response = await axios.get(
@@ -191,7 +191,6 @@ function ProfileScreen() {
     }
   };
 
-  // Close follow dialog
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setDialogType('');
@@ -205,8 +204,9 @@ function ProfileScreen() {
         userId={userId}
         isOwnProfile={isOwnProfile}
         loggedInUserId={loggedInUserId}
-        onStoryUpload={handleStoryUpload} // Pass story upload handler
-        stories={stories} // Pass stories data
+        onStoryUpload={handleStoryUpload}
+        onDeleteStory={handleDeleteStory} 
+        stories={stories}
       />
       <ProfileStats
         totalPosts={totalPosts}
@@ -214,26 +214,10 @@ function ProfileScreen() {
         followingCount={profileFollowing.length}
         onStatClick={handleOpenDialog}
       />
-      <TabsSection
-        selectedTab={selectedTab}
-        onTabChange={(e, newValue) => setSelectedTab(newValue)}
-      />
-      {selectedTab === 'post' && (
-        <PostsGrid
-          uploadedImages={uploadedImages}
-          fetchPosts={fetchUserPosts}
-          token={token}
-          setUploadedImages={setUploadedImages}
-        />
-      )}
-      {isOwnProfile && <Highlights userId={userId} token={token} />} {/* Render Highlights component */}
-      <FollowDialog
-        open={openDialog}
-        type={dialogType}
-        onClose={handleCloseDialog}
-        followers={profileFollowers}
-        following={profileFollowing}
-      />
+      <TabsSection selectedTab={selectedTab} onTabChange={(e, newValue) => setSelectedTab(newValue)} />
+      {selectedTab === 'post' && <PostsGrid uploadedImages={uploadedImages} fetchPosts={fetchUserPosts} />}
+      {isOwnProfile && <Highlights userId={userId} token={token} />}
+      <FollowDialog open={openDialog} type={dialogType} onClose={handleCloseDialog} followers={profileFollowers} following={profileFollowing} />
     </Box>
   );
 }
