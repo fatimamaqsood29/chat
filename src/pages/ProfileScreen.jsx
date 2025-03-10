@@ -11,6 +11,7 @@ import {
   PostsGrid,
   FollowDialog,
 } from '../components/profile';
+import Highlights from '../components/profile/Highlights'; // Import the Highlights component
 import { useDispatch, useSelector } from 'react-redux';
 import { uploadStory, fetchFollowingStories, deleteStory } from '../features/storySlice';
 
@@ -37,7 +38,7 @@ function ProfileScreen() {
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogType, setDialogType] = useState('');
 
-  const { stories, loading: storiesLoading, error: storiesError } = useSelector((state) => state.story); // Get stories from Redux store
+  const { stories, loading: storiesLoading, error: storiesError } = useSelector((state) => state.story);
 
   // Redirect to login if user is not authenticated
   useEffect(() => {
@@ -121,21 +122,28 @@ function ProfileScreen() {
     const file = e.target.files[0];
     if (file) {
       try {
-        await dispatch(uploadStory(file)).unwrap();
+        const response = await dispatch(uploadStory(file)).unwrap();
         toast.success('Story uploaded successfully!');
+        // Add the uploaded story to highlights
+        await handleAddHighlight(response.story_id, 'New Highlight');
       } catch (error) {
         toast.error('Failed to upload story');
       }
     }
   };
 
-  // Handle story deletion
-  const handleDeleteStory = async (storyId) => {
+  // Handle adding a story to highlights
+  const handleAddHighlight = async (storyId, title) => {
     try {
-      await dispatch(deleteStory(storyId)).unwrap();
-      toast.success('Story deleted successfully!');
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/highlights`,
+        { story_id: storyId, title },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(response.data.message);
     } catch (error) {
-      toast.error('Failed to delete story');
+      console.error('Error adding highlight:', error);
+      toast.error('Failed to add highlight. Please try again.');
     }
   };
 
@@ -199,7 +207,6 @@ function ProfileScreen() {
         loggedInUserId={loggedInUserId}
         onStoryUpload={handleStoryUpload} // Pass story upload handler
         stories={stories} // Pass stories data
-        onDeleteStory={handleDeleteStory} // Pass story delete handler
       />
       <ProfileStats
         totalPosts={totalPosts}
@@ -219,6 +226,7 @@ function ProfileScreen() {
           setUploadedImages={setUploadedImages}
         />
       )}
+      {isOwnProfile && <Highlights userId={userId} token={token} />} {/* Render Highlights component */}
       <FollowDialog
         open={openDialog}
         type={dialogType}

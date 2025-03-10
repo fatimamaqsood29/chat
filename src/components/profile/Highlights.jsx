@@ -1,131 +1,122 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { toast } from "react-toastify";
-import { Box, IconButton, Typography, Avatar, Modal, TextField, Button } from "@mui/material";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import DeleteIcon from "@mui/icons-material/Delete";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Box, Typography, Avatar, CircularProgress, IconButton } from '@mui/material';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 
-const Highlights = ({ userId, isOwnProfile }) => {
+const Highlights = ({ userId, token }) => {
   const [highlights, setHighlights] = useState([]);
-  const [openModal, setOpenModal] = useState(false);
-  const [newHighlightTitle, setNewHighlightTitle] = useState("");
-  const [selectedStoryId, setSelectedStoryId] = useState("");
-  const token = localStorage.getItem("access_token");
+  const [stories, setStories] = useState([]); // State to store user stories
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (userId) {
-      fetchHighlights();
-    }
+    fetchHighlights();
+    fetchStories(); // Fetch user stories when the component mounts
   }, [userId]);
 
+  // Fetch highlights from the API
   const fetchHighlights = async () => {
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/api/posts/highlights`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (Array.isArray(response.data)) {
-        setHighlights(response.data);
-      }
+      setHighlights(response.data);
     } catch (error) {
-      console.error("Error fetching highlights:", error);
-      toast.error("Failed to load highlights. Please try again.");
+      console.error('Error fetching highlights:', error);
+      toast.error('Failed to load highlights. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleAddHighlight = async () => {
+  // Fetch user stories from the API
+  const fetchStories = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/stories/me`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setStories(response.data); // Set the fetched stories in state
+    } catch (error) {
+      console.error('Error fetching stories:', error);
+      toast.error('Failed to load stories. Please try again.');
+    }
+  };
+
+  // Add a story to highlights
+  const handleAddHighlight = async (storyId, title) => {
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/api/posts/highlights`,
-        { story_id: selectedStoryId, title: newHighlightTitle },
+        { story_id: storyId, title },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (response.data) {
-        setHighlights([...highlights, response.data]);
-        setOpenModal(false);
-        setNewHighlightTitle("");
-        toast.success("Highlight added successfully!");
-      }
+      toast.success(response.data.message);
+      fetchHighlights(); // Refresh the highlights list
     } catch (error) {
-      console.error("Error adding highlight:", error);
-      toast.error("Failed to add highlight. Please try again.");
+      console.error('Error adding highlight:', error);
+      toast.error('Failed to add highlight. Please try again.');
     }
   };
 
+  // Delete a highlight
   const handleDeleteHighlight = async (highlightId) => {
     try {
       await axios.delete(
         `${import.meta.env.VITE_API_BASE_URL}/api/posts/highlights/${highlightId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setHighlights(highlights.filter((highlight) => highlight._id !== highlightId));
-      toast.success("Highlight deleted successfully!");
+      toast.success('Highlight deleted successfully!');
+      fetchHighlights(); // Refresh the highlights list
     } catch (error) {
-      console.error("Error deleting highlight:", error);
-      toast.error("Failed to delete highlight. Please try again.");
+      console.error('Error deleting highlight:', error);
+      toast.error('Failed to delete highlight. Please try again.');
     }
   };
+
+  if (loading) {
+    return <CircularProgress />;
+  }
 
   return (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h6" sx={{ mb: 2 }}>
         Highlights
       </Typography>
-      <Box sx={{ display: "flex", overflowX: "auto", gap: 2 }}>
-        {isOwnProfile && (
-          <IconButton onClick={() => setOpenModal(true)}>
-            <AddCircleOutlineIcon fontSize="large" />
-          </IconButton>
-        )}
+      <Box sx={{ display: 'flex', overflowX: 'auto', gap: 2 }}>
+        {/* Display existing highlights */}
         {highlights.map((highlight) => (
-          <Box key={highlight._id} sx={{ textAlign: "center" }}>
+          <Box key={highlight._id} sx={{ textAlign: 'center' }}>
             <Avatar
-              src={highlight.story_image || "/default-avatar.png"}
-              sx={{ width: 64, height: 64, cursor: "pointer" }}
+              src={highlight.story_image}
+              sx={{ width: 80, height: 80, cursor: 'pointer', border: '2px solid', borderColor: 'primary.main' }}
+              onClick={() => handleDeleteHighlight(highlight._id)}
             />
             <Typography variant="caption">{highlight.title}</Typography>
-            {isOwnProfile && (
-              <IconButton onClick={() => handleDeleteHighlight(highlight._id)}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            )}
           </Box>
         ))}
-      </Box>
 
-      <Modal open={openModal} onClose={() => setOpenModal(false)}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 400,
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            p: 4,
-          }}
-        >
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Add Highlight
+        {/* Add Highlight Section */}
+        <Box sx={{ textAlign: 'center' }}>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            Add to Highlights
           </Typography>
-          <TextField
-            fullWidth
-            label="Title"
-            value={newHighlightTitle}
-            onChange={(e) => setNewHighlightTitle(e.target.value)}
-            sx={{ mb: 2 }}
-          />
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={handleAddHighlight}
-            disabled={!newHighlightTitle || !selectedStoryId}
-          >
-            Add
-          </Button>
+          <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto' }}>
+            {stories.map((story) => (
+              <Box key={story._id} sx={{ textAlign: 'center' }}>
+                <Avatar
+                  src={story.imageUrl}
+                  sx={{ width: 60, height: 60, cursor: 'pointer', border: '2px solid', borderColor: 'primary.main' }}
+                  onClick={() => handleAddHighlight(story._id, 'New Highlight')} // Add story to highlights
+                />
+                <Typography variant="caption">Story</Typography>
+              </Box>
+            ))}
+          </Box>
         </Box>
-      </Modal>
+      </Box>
     </Box>
   );
 };
