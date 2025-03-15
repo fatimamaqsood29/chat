@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { Box } from '@mui/material';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Box } from "@mui/material";
 import {
   ProfileHeader,
   TabsSection,
   PostsGrid,
   FollowDialog,
-} from '../components/profile';
-import Highlights from '../components/profile/Highlights'; 
-import { useDispatch, useSelector } from 'react-redux';
-import { uploadStory, fetchFollowingStories, deleteStory } from '../features/storySlice';
+} from "../components/profile";
+import { useDispatch, useSelector } from "react-redux";
+import { uploadStory, fetchFollowingStories, deleteStory } from "../features/storySlice";
 
 function ProfileScreen() {
   const navigate = useNavigate();
@@ -20,29 +19,29 @@ function ProfileScreen() {
   const location = useLocation();
   const dispatch = useDispatch();
 
-  const loggedInUserId = localStorage.getItem('user_id');
-  const token = localStorage.getItem('access_token');
+  const loggedInUserId = localStorage.getItem("user_id");
+  const token = localStorage.getItem("access_token");
   const isOwnProfile = loggedInUserId === userId;
 
-  const [selectedTab, setSelectedTab] = useState('post');
+  const [selectedTab, setSelectedTab] = useState("post");
   const [profileData, setProfileData] = useState({
-    name: localStorage.getItem('profile_name') || 'John Doe',
-    bio: localStorage.getItem('profile_bio') || '',
-    profileImage: localStorage.getItem('profile_image') || '/default-avatar.png',
+    name: localStorage.getItem("profile_name") || "John Doe",
+    bio: localStorage.getItem("profile_bio") || "",
+    profileImage: localStorage.getItem("profile_image") || "/default-avatar.png",
   });
   const [profileFollowers, setProfileFollowers] = useState([]);
   const [profileFollowing, setProfileFollowing] = useState([]);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [totalPosts, setTotalPosts] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
-  const [dialogType, setDialogType] = useState('');
+  const [dialogType, setDialogType] = useState("");
 
   const { stories } = useSelector((state) => state.story);
 
   useEffect(() => {
     if (!loggedInUserId || !token) {
-      toast.error('Please log in to view this profile.');
-      navigate('/login');
+      toast.error("Please log in to view this profile.");
+      navigate("/login");
     }
   }, [loggedInUserId, token, navigate]);
 
@@ -52,9 +51,9 @@ function ProfileScreen() {
       setProfileData(location.state.profileData);
       if (followers) setProfileFollowers(followers);
       if (following) setProfileFollowing(following);
-      localStorage.setItem('profile_name', name);
-      localStorage.setItem('profile_bio', bio);
-      localStorage.setItem('profile_image', profileImage || '/default-avatar.png');
+      localStorage.setItem("profile_name", name);
+      localStorage.setItem("profile_bio", bio);
+      localStorage.setItem("profile_image", profileImage || "/default-avatar.png");
     } else {
       fetchProfileData();
     }
@@ -65,8 +64,8 @@ function ProfileScreen() {
   const fetchProfileData = async () => {
     try {
       if (!token) {
-        toast.error('User not authenticated');
-        navigate('/login');
+        toast.error("User not authenticated");
+        navigate("/login");
         return;
       }
       const response = await axios.get(
@@ -76,20 +75,20 @@ function ProfileScreen() {
       if (response.data) {
         const userData = response.data.user || response.data;
         const updatedData = {
-          name: userData.name || 'John Doe',
-          bio: userData.bio || '',
-          profileImage: userData.profile_picture || '/default-avatar.png',
+          name: userData.name || "John Doe",
+          bio: userData.bio || "",
+          profileImage: userData.profile_picture || "/default-avatar.png",
         };
         setProfileData(userData);
         setProfileFollowers(userData.followers || []);
         setProfileFollowing(userData.following || []);
-        localStorage.setItem('profile_name', updatedData.name);
-        localStorage.setItem('profile_bio', updatedData.bio);
-        localStorage.setItem('profile_image', updatedData.profileImage);
+        localStorage.setItem("profile_name", updatedData.name);
+        localStorage.setItem("profile_bio", updatedData.bio);
+        localStorage.setItem("profile_image", updatedData.profileImage);
       }
     } catch (error) {
-      console.error('Error fetching profile data:', error);
-      toast.error('Failed to load profile. Please try again.');
+      console.error("Error fetching profile data:", error);
+      toast.error("Failed to load profile. Please try again.");
     }
   };
 
@@ -107,8 +106,8 @@ function ProfileScreen() {
         setTotalPosts(0);
       }
     } catch (error) {
-      console.error('Error fetching user posts:', error);
-      toast.error('Failed to load posts. Please try again.');
+      console.error("Error fetching user posts:", error);
+      toast.error("Failed to load posts. Please try again.");
     }
   };
 
@@ -117,10 +116,10 @@ function ProfileScreen() {
     if (file) {
       try {
         const response = await dispatch(uploadStory(file)).unwrap();
-        toast.success('Story uploaded successfully!');
-        await handleAddHighlight(response.story_id, 'New Highlight');
+        toast.success("Story uploaded successfully!");
+        await handleAddHighlight(response.story_id, "New Highlight");
       } catch (error) {
-        toast.error('Failed to upload story');
+        toast.error("Failed to upload story");
       }
     }
   };
@@ -134,26 +133,26 @@ function ProfileScreen() {
       );
       toast.success(response.data.message);
     } catch (error) {
-      console.error('Error adding highlight:', error);
-      toast.error('Failed to add highlight. Please try again.');
+      console.error("Error adding highlight:", error);
+      toast.error("Failed to add highlight. Please try again.");
     }
   };
 
   const handleDeleteStory = async (storyId) => {
     try {
       await dispatch(deleteStory(storyId)).unwrap();
-      toast.success('Story deleted successfully!');
+      toast.success("Story deleted successfully!");
       dispatch(fetchFollowingStories());
     } catch (error) {
-      toast.error('Failed to delete story');
+      toast.error("Failed to delete story");
     }
   };
 
   const handleOpenDialog = async (type) => {
-    if (type === 'followers') {
+    if (type === "followers") {
       await fetchFollowers();
     }
-    if (type === 'following') {
+    if (type === "following") {
       await fetchFollowing();
     }
     setDialogType(type);
@@ -170,8 +169,8 @@ function ProfileScreen() {
         setProfileFollowers(response.data);
       }
     } catch (error) {
-      console.error('Error fetching followers:', error);
-      toast.error('Failed to load followers. Please try again.');
+      console.error("Error fetching followers:", error);
+      toast.error("Failed to load followers. Please try again.");
     }
   };
 
@@ -185,14 +184,14 @@ function ProfileScreen() {
         setProfileFollowing(response.data);
       }
     } catch (error) {
-      console.error('Error fetching following:', error);
-      toast.error('Failed to load following. Please try again.');
+      console.error("Error fetching following:", error);
+      toast.error("Failed to load following. Please try again.");
     }
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setDialogType('');
+    setDialogType("");
   };
 
   return (
@@ -214,10 +213,9 @@ function ProfileScreen() {
         selectedTab={selectedTab}
         onTabChange={(e, newValue) => setSelectedTab(newValue)}
       />
-      {selectedTab === 'post' && (
+      {selectedTab === "post" && (
         <PostsGrid uploadedImages={uploadedImages} fetchPosts={fetchUserPosts} />
       )}
-      {isOwnProfile && <Highlights userId={userId} token={token} />}
       <FollowDialog
         open={openDialog}
         type={dialogType}

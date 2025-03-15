@@ -5,6 +5,9 @@ const Stories = ({ darkMode, stories, loading }) => {
   const [selectedStoryIndex, setSelectedStoryIndex] = useState(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
 
+  // Get the logged-in user's ID
+  const loggedInUserId = localStorage.getItem("user_id") || JSON.parse(localStorage.getItem("user"))?.id;
+
   const handleStoryClick = (index) => {
     setSelectedStoryIndex(index);
     setIsViewerOpen(true);
@@ -55,6 +58,7 @@ const Stories = ({ darkMode, stories, loading }) => {
           stories={stories}
           initialIndex={selectedStoryIndex}
           onClose={handleCloseViewer}
+          isOwnProfile={stories[selectedStoryIndex]?.user_id === loggedInUserId} // Pass isOwnProfile
         />
       )}
     </div>
