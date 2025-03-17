@@ -8,7 +8,7 @@ import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import { setCurrentChatroom, createChatroom } from "../../features/chatSlice";
 
 export const ProfileHeader = ({
-  profileData,
+  profileData: propProfileData,
   userId: propUserId,
   isOwnProfile,
   loggedInUserId,
@@ -25,12 +25,28 @@ export const ProfileHeader = ({
   const [stories, setStories] = useState([]);
   const [highlights, setHighlights] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [profileData, setProfileData] = useState(propProfileData);
 
   // Retrieve userId from prop or localStorage
   const userId =
     propUserId ||
     localStorage.getItem("user_id") ||
     JSON.parse(localStorage.getItem("user"))?.id;
+
+  // Fetch profile data from localStorage on component mount
+  useEffect(() => {
+    const storedProfileData = JSON.parse(localStorage.getItem("profileData"));
+    if (storedProfileData) {
+      setProfileData(storedProfileData);
+    }
+  }, []);
+
+  // Update localStorage whenever profileData changes
+  useEffect(() => {
+    if (profileData) {
+      localStorage.setItem("profileData", JSON.stringify(profileData));
+    }
+  }, [profileData]);
 
   // Fetch stories for the logged-in user
   const fetchStories = async () => {
