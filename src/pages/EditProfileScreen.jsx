@@ -76,12 +76,10 @@ function EditProfileScreen() {
 
       console.log("Update response:", response.data);
 
-      // Save updated profile data to localStorage
       localStorage.setItem("profile_name", name);
       localStorage.setItem("profile_bio", bio);
       localStorage.setItem("profile_image", profileImage || "/default-avatar.png");
 
-      // Navigate back to the profile page with updated data
       navigate(`/profile/${userId}`, {
         state: { profileData: { name, bio, profileImage } },
       });

@@ -39,7 +39,6 @@ function ProfileScreen() {
 
   const { stories, loading: storiesLoading, error: storiesError } = useSelector((state) => state.story);
 
-  // Check if the user is logged in
   useEffect(() => {
     if (!loggedInUserId || !token) {
       toast.error("Please log in to view this profile.");
@@ -47,10 +46,8 @@ function ProfileScreen() {
     }
   }, [loggedInUserId, token, navigate]);
 
-  // Fetch profile data and posts when the component mounts or userId changes
   useEffect(() => {
     if (location.state?.profileData) {
-      // If profile data is passed via location state, use it
       const { name, bio, profileImage, followers, following } = location.state.profileData;
       setProfileData(location.state.profileData);
       if (followers) setProfileFollowers(followers);
@@ -59,14 +56,12 @@ function ProfileScreen() {
       localStorage.setItem("profile_bio", bio);
       localStorage.setItem("profile_image", profileImage || "/default-avatar.png");
     } else {
-      // Otherwise, fetch profile data from the API
       fetchProfileData();
     }
     fetchUserPosts();
     dispatch(fetchFollowingStories());
   }, [userId, location.key]);
 
-  // Fetch profile data from the API
   const fetchProfileData = async () => {
     try {
       if (!token) {
@@ -85,10 +80,9 @@ function ProfileScreen() {
           bio: userData.bio || "",
           profileImage: userData.profile_picture || "/default-avatar.png",
         };
-        setProfileData(updatedData);
+        setProfileData(userData);
         setProfileFollowers(userData.followers || []);
         setProfileFollowing(userData.following || []);
-        // Save profile data to localStorage
         localStorage.setItem("profile_name", updatedData.name);
         localStorage.setItem("profile_bio", updatedData.bio);
         localStorage.setItem("profile_image", updatedData.profileImage);
@@ -99,7 +93,6 @@ function ProfileScreen() {
     }
   };
 
-  // Fetch user posts
   const fetchUserPosts = async () => {
     try {
       const response = await axios.get(
@@ -119,53 +112,43 @@ function ProfileScreen() {
     }
   };
 
-  // Handle story upload
   const handleStoryUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please upload a valid image file.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image size must be less than 5MB.");
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append("story", file);
-
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/posts/stories`,
-        formData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (response.data) {
+    if (file) {
+      try {
+        const response = await dispatch(uploadStory(file)).unwrap();
         toast.success("Story uploaded successfully!");
-        dispatch(fetchFollowingStories()); // Refresh stories
+        await handleAddHighlight(response.story_id, "New Highlight");
+      } catch (error) {
+        toast.error("Failed to upload story");
       }
-    } catch (error) {
-      console.error("Error uploading story:", error);
-      toast.error("Failed to upload story. Please try again.");
     }
   };
 
-  // Handle delete story
+  const handleAddHighlight = async (storyId, title) => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/highlights`,
+        { story_id: storyId, title },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(response.data.message);
+    } catch (error) {
+      console.error("Error adding highlight:", error);
+      toast.error("Failed to add highlight. Please try again.");
+    }
+  };
+
   const handleDeleteStory = async (storyId) => {
     try {
       await dispatch(deleteStory(storyId)).unwrap();
       toast.success("Story deleted successfully!");
-      dispatch(fetchFollowingStories()); // Refresh stories
+      dispatch(fetchFollowingStories());
     } catch (error) {
-      console.error("Error deleting story:", error);
-      toast.error("Failed to delete story.");
+      toast.error("Failed to delete story");
     }
   };
 
-  // Open followers/following dialog
   const handleOpenDialog = async (type) => {
     if (type === "followers") {
       await fetchFollowers();
@@ -177,7 +160,6 @@ function ProfileScreen() {
     setOpenDialog(true);
   };
 
-  // Fetch followers
   const fetchFollowers = async () => {
     try {
       const response = await axios.get(
@@ -193,7 +175,6 @@ function ProfileScreen() {
     }
   };
 
-  // Fetch following
   const fetchFollowing = async () => {
     try {
       const response = await axios.get(
@@ -209,7 +190,6 @@ function ProfileScreen() {
     }
   };
 
-  // Close dialog
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setDialogType("");
