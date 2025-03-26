@@ -1,15 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { IconButton, Menu, MenuItem, Box } from "@mui/material";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import DeleteIcon from "@mui/icons-material/Delete";
+import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import axios from "axios";
 
-const StoryViewer = ({ stories, initialIndex, onClose, isOwnProfile }) => {
+const StoryViewer = ({ stories, initialIndex, onClose, isOwnProfile, onDeleteStory }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
-  const [anchorEl, setAnchorEl] = useState(null); // For the three-dot menu
-  const openMenu = Boolean(anchorEl); // Check if the menu is open
+  const [showMenu, setShowMenu] = useState(false);
 
   const currentStory = stories[currentIndex];
 
@@ -66,31 +61,19 @@ const StoryViewer = ({ stories, initialIndex, onClose, isOwnProfile }) => {
     }
   };
 
-  // Handle story deletion
+  // Handle delete story
   const handleDeleteStory = async () => {
-    try {
-      const token = localStorage.getItem("access_token");
-      await axios.delete(
-        `${import.meta.env.VITE_API_BASE_URL}/api/posts/stories/${currentStory._id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success("Story deleted successfully!");
-      onClose(); // Close the viewer after deletion
-    } catch (error) {
-      console.error("Error deleting story:", error);
-      toast.error("Failed to delete story.");
+    if (isOwnProfile) {
+      try {
+        // Call the parent function to delete the story
+        await onDeleteStory(currentStory._id);
+        toast.success("Story deleted successfully");
+        onClose(); // Close the viewer after deletion
+      } catch (error) {
+        console.error("Error deleting story:", error);
+        toast.error("Failed to delete story.");
+      }
     }
-  };
-
-  // Handle three-dot menu open
-  const handleMenuOpen = (event) => {
-    console.log("Menu opened"); // Debugging
-    setAnchorEl(event.currentTarget);
-  };
-
-  // Handle three-dot menu close
-  const handleMenuClose = () => {
-    setAnchorEl(null);
   };
 
   return (

@@ -64,6 +64,7 @@ const Stories = ({ darkMode, stories, loading, loggedInUserId, onDeleteStory }) 
           initialIndex={selectedStoryIndex}
           onClose={handleCloseViewer}
           isOwnProfile={stories[selectedStoryIndex]?.user_id === loggedInUserId} // Pass isOwnProfile
+          onDeleteStory={onDeleteStory} // Pass onDeleteStory function
         />
       )}
     </div>
