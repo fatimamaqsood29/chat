@@ -42,6 +42,27 @@ const Home = () => {
     }
   };
 
+  // Get logged-in user ID from localStorage
+  const loggedInUserId = localStorage.getItem("user_id");
+
+  // Function to delete a story
+  const handleDeleteStory = async (storyId) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const response = await axios.delete(
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/stories/${storyId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.message) {
+        toast.success("Story deleted successfully");
+        dispatch(fetchFollowingStories()); // Refresh stories after deletion
+      }
+    } catch (error) {
+      console.error("Error deleting story:", error);
+      toast.error("Failed to delete story.");
+    }
+  };
+
   useEffect(() => {
     dispatch(fetchPosts());
     dispatch(fetchSuggestions());
