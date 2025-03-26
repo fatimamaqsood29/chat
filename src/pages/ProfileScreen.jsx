@@ -84,9 +84,9 @@ function ProfileScreen() {
         setProfileData(userData);
         setProfileFollowers(userData.followers || []);
         setProfileFollowing(userData.following || []);
-        localStorage.setItem('profile_name', updatedData.name);
-        localStorage.setItem('profile_bio', updatedData.bio);
-        localStorage.setItem('profile_image', updatedData.profileImage);
+        localStorage.setItem("profile_name", updatedData.name);
+        localStorage.setItem("profile_bio", updatedData.bio);
+        localStorage.setItem("profile_image", updatedData.profileImage);
       }
     } catch (error) {
       console.error('Error fetching profile data:', error);
@@ -118,10 +118,10 @@ function ProfileScreen() {
     if (file) {
       try {
         const response = await dispatch(uploadStory(file)).unwrap();
-        toast.success('Story uploaded successfully!');
-        await handleAddHighlight(response.story_id, 'New Highlight');
+        toast.success("Story uploaded successfully!");
+        await handleAddHighlight(response.story_id, "New Highlight");
       } catch (error) {
-        toast.error('Failed to upload story');
+        toast.error("Failed to upload story");
       }
     }
   };
@@ -135,18 +135,18 @@ function ProfileScreen() {
       );
       toast.success(response.data.message);
     } catch (error) {
-      console.error('Error adding highlight:', error);
-      toast.error('Failed to add highlight. Please try again.');
+      console.error("Error adding highlight:", error);
+      toast.error("Failed to add highlight. Please try again.");
     }
   };
 
   const handleDeleteStory = async (storyId) => {
     try {
       await dispatch(deleteStory(storyId)).unwrap();
-      toast.success('Story deleted successfully!');
-      dispatch(fetchFollowingStories()); 
+      toast.success("Story deleted successfully!");
+      dispatch(fetchFollowingStories());
     } catch (error) {
-      toast.error('Failed to delete story');
+      toast.error("Failed to delete story");
     }
   };
 

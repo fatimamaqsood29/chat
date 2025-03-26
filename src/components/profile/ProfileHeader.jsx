@@ -9,7 +9,7 @@ import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate"; // Fo
 
 export const ProfileHeader = ({
   profileData,
-  userId: propUserId, // userId passed as a prop
+  userId: propUserId,
   isOwnProfile,
   loggedInUserId,
   onStoryUpload,
@@ -19,6 +19,8 @@ export const ProfileHeader = ({
   const navigate = useNavigate();
   const [isFollowing, setIsFollowing] = useState(false);
   const [stories, setStories] = useState([]);
+  const [highlights, setHighlights] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Retrieve userId from localStorage if not passed as a prop
   const userId =
