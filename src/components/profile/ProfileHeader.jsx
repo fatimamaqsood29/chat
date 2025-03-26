@@ -1,14 +1,14 @@
-import { Avatar, Box, Button, Typography, IconButton } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Avatar, Box, Button, Typography, IconButton, CircularProgress } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
-import { useState, useEffect } from "react";
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import { setCurrentChatroom, createChatroom } from "../../features/chatSlice";
-import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate"; // For story upload icon
 
 export const ProfileHeader = ({
-  profileData,
+  profileData: propProfileData,
   userId: propUserId,
   isOwnProfile,
   loggedInUserId,
@@ -21,12 +21,28 @@ export const ProfileHeader = ({
   const [stories, setStories] = useState([]);
   const [highlights, setHighlights] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [profileData, setProfileData] = useState(propProfileData);
 
   // Retrieve userId from localStorage if not passed as a prop
   const userId =
     propUserId ||
     localStorage.getItem("user_id") ||
     JSON.parse(localStorage.getItem("user"))?.id;
+
+  // Fetch profile data from localStorage on component mount
+  useEffect(() => {
+    const storedProfileData = JSON.parse(localStorage.getItem("profileData"));
+    if (storedProfileData) {
+      setProfileData(storedProfileData);
+    }
+  }, []);
+
+  // Update localStorage whenever profileData changes
+  useEffect(() => {
+    if (profileData) {
+      localStorage.setItem("profileData", JSON.stringify(profileData));
+    }
+  }, [profileData]);
 
   // Fetch stories for the logged-in user
   const fetchStories = async () => {
@@ -36,23 +52,68 @@ export const ProfileHeader = ({
         `${import.meta.env.VITE_API_BASE_URL}/api/posts/stories/me`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      return response.data; // Array of stories
+      setStories(response.data);
     } catch (error) {
       console.error("Error fetching stories:", error);
       toast.error("Failed to fetch stories.");
-      return [];
+    }
+  };
+
+  // Fetch highlights for the logged-in user
+  const fetchHighlights = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/highlights`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setHighlights(response.data);
+    } catch (error) {
+      console.error("Error fetching highlights:", error);
+      toast.error("Failed to load highlights.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add a story to highlights
+  const handleAddHighlight = async (storyId, title) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/highlights`,
+        { story_id: storyId, title },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(response.data.message);
+      fetchHighlights(); // Refresh highlights
+    } catch (error) {
+      console.error("Error adding highlight:", error);
+      toast.error("Failed to add highlight.");
+    }
+  };
+
+  // Delete a highlight
+  const handleDeleteHighlight = async (highlightId) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.delete(
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/highlights/${highlightId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Highlight deleted successfully!");
+      fetchHighlights(); // Refresh highlights
+    } catch (error) {
+      console.error("Error deleting highlight:", error);
+      toast.error("Failed to delete highlight.");
     }
   };
 
   // Load stories when the component mounts
   useEffect(() => {
-    const loadStories = async () => {
-      const storiesData = await fetchStories();
-      setStories(storiesData);
-    };
-
     if (isOwnProfile) {
-      loadStories();
+      fetchStories();
+      fetchHighlights();
     }
   }, [isOwnProfile]);
 
@@ -221,51 +282,57 @@ export const ProfileHeader = ({
         )}
       </Box>
 
-      {/* Stories Section */}
-      <Box display="flex" gap={2} overflow="auto" py={2}>
-        {stories.map((story) => (
-          <Box
-            key={story._id}
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            gap={1}
-            sx={{ cursor: "pointer" }}
-            onClick={() => {
-              if (story.user?._id) {
-                navigate(`/stories/${story.user._id}`);
-              } else {
-                console.error("Story user ID is undefined:", story);
-                toast.error("Failed to load story. User ID is missing.");
-              }
-            }}
-          >
-            <Avatar
-              src={story.imageUrl}
-              alt="Story"
-              sx={{
-                width: 60,
-                height: 60,
-                border: "2px solid",
-                borderColor: "primary.main",
-              }}
-            />
-            {isOwnProfile && (
-              <Button
-                variant="text"
-                color="error"
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteStory(story._id);
-                }}
-              >
-                Delete
-              </Button>
-            )}
+      {/* Highlights Section */}
+      {isOwnProfile && (
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Highlights
+          </Typography>
+          <Box sx={{ display: "flex", overflowX: "auto", gap: 2 }}>
+            {highlights.map((highlight) => (
+              <Box key={highlight._id} sx={{ textAlign: "center" }}>
+                <Avatar
+                  src={highlight.story_image}
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    cursor: "pointer",
+                    border: "2px solid",
+                    borderColor: "primary.main",
+                  }}
+                  onClick={() => handleDeleteHighlight(highlight._id)}
+                />
+                <Typography variant="caption">{highlight.title}</Typography>
+              </Box>
+            ))}
+
+            {/* Add Highlight Section */}
+            <Box sx={{ textAlign: "center" }}>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Add to Highlights
+              </Typography>
+              <Box sx={{ display: "flex", gap: 2, overflowX: "auto" }}>
+                {stories.map((story) => (
+                  <Box key={story._id} sx={{ textAlign: "center" }}>
+                    <Avatar
+                      src={story.imageUrl}
+                      sx={{
+                        width: 60,
+                        height: 60,
+                        cursor: "pointer",
+                        border: "2px solid",
+                        borderColor: "primary.main",
+                      }}
+                      onClick={() => handleAddHighlight(story._id, "New Highlight")}
+                    />
+                    <Typography variant="caption">Story</Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
           </Box>
-        ))}
-      </Box>
+        </Box>
+      )}
     </Box>
   );
 };

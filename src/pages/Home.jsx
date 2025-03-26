@@ -4,8 +4,8 @@ import { fetchPosts } from "../features/postSlice";
 import { fetchSuggestions } from "../features/followSlice";
 import { useThemeContext } from "../ThemeContext";
 import Post from "../components/home/Post";
-import Stories from "../components/home/Stories"; // Import Stories component
-import { fetchFollowingStories } from "../features/storySlice"; // Import action for stories
+import Stories from "../components/home/Stories";
+import { fetchFollowingStories } from "../features/storySlice";
 
 const Home = () => {
   const { darkMode } = useThemeContext();
@@ -14,15 +14,15 @@ const Home = () => {
   // Fetching data from Redux store
   const posts = useSelector((state) => state.post.posts);
   const suggestions = useSelector((state) => state.follow.suggestions);
-  const stories = useSelector((state) => state.story.stories); // Get stories from Redux
+  const stories = useSelector((state) => state.story.stories);
   const postsLoading = useSelector((state) => state.post.loading);
   const suggestionsLoading = useSelector((state) => state.follow.loading);
-  const storiesLoading = useSelector((state) => state.story.loading); // Stories loading state
+  const storiesLoading = useSelector((state) => state.story.loading);
 
   useEffect(() => {
-    dispatch(fetchPosts()); // Fetch posts
-    dispatch(fetchSuggestions()); // Fetch suggested users
-    dispatch(fetchFollowingStories()); // Fetch stories
+    dispatch(fetchPosts());
+    dispatch(fetchSuggestions());
+    dispatch(fetchFollowingStories());
   }, [dispatch]);
 
   return (
@@ -57,22 +57,6 @@ const Home = () => {
 
           {/* Suggestions Section */}
           <div className="w-80 hidden lg:block">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <img
-                  className="w-12 h-12 rounded-full"
-                  src="https://i.pravatar.cc/150?img=12"
-                  alt="Your avatar"
-                />
-                <div className="ml-4">
-                  <p className="font-semibold text-sm text-gray-900 dark:text-gray-100">
-                    your_username
-                  </p>
-                  <p className="text-xs text-gray-500">Your Name</p>
-                </div>
-              </div>
-              <button className="text-blue-500 text-sm font-semibold">Switch</button>
-            </div>
             <div className="flex justify-between mb-4">
               <p className="text-sm font-semibold text-gray-500">Suggestions For You</p>
               <button className="text-xs font-bold">See All</button>

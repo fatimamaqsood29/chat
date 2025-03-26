@@ -1,10 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from "react";
+import { IconButton, Menu, MenuItem, Box } from "@mui/material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { toast } from "react-toastify";
+import axios from "axios";
 
-const StoryViewer = ({ stories, initialIndex, onClose }) => {
+const StoryViewer = ({ stories, initialIndex, onClose, isOwnProfile }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
+  const [anchorEl, setAnchorEl] = useState(null); // For the three-dot menu
+  const openMenu = Boolean(anchorEl); // Check if the menu is open
 
   const currentStory = stories[currentIndex];
+
+  // Debugging logs
+  console.log("isOwnProfile:", isOwnProfile);
+  console.log("Stories:", stories);
+  console.log("Current Story:", currentStory);
 
   // Handle story progress
   useEffect(() => {
@@ -54,6 +66,33 @@ const StoryViewer = ({ stories, initialIndex, onClose }) => {
     }
   };
 
+  // Handle story deletion
+  const handleDeleteStory = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.delete(
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/stories/${currentStory._id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Story deleted successfully!");
+      onClose(); // Close the viewer after deletion
+    } catch (error) {
+      console.error("Error deleting story:", error);
+      toast.error("Failed to delete story.");
+    }
+  };
+
+  // Handle three-dot menu open
+  const handleMenuOpen = (event) => {
+    console.log("Menu opened"); // Debugging
+    setAnchorEl(event.currentTarget);
+  };
+
+  // Handle three-dot menu close
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
@@ -95,6 +134,55 @@ const StoryViewer = ({ stories, initialIndex, onClose }) => {
             {currentStory.user_name}
           </span>
         </div>
+
+        {/* Three-Dot Menu (Visible only for the story owner) */}
+        {isOwnProfile && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              zIndex: 1000, // Ensure it is above other elements
+            }}
+          >
+            <IconButton
+              onClick={handleMenuOpen}
+              sx={{
+                color: "white",
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+                "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.4)" },
+              }}
+            >
+              <MoreVertIcon />
+            </IconButton>
+
+            {/* Dropdown Menu */}
+            <Menu
+              anchorEl={anchorEl}
+              open={openMenu}
+              onClose={handleMenuClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "right",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+            >
+              <MenuItem
+                onClick={() => {
+                  handleDeleteStory();
+                  handleMenuClose();
+                }}
+                sx={{ color: "error.main" }}
+              >
+                <DeleteIcon sx={{ mr: 1 }} />
+                Delete Story
+              </MenuItem>
+            </Menu>
+          </Box>
+        )}
 
         {/* Navigation Buttons */}
         <button
