@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import React, { useEffect, useState } from 'react';
 
-const StoryViewer = ({ stories, initialIndex, onClose, isOwnProfile, onDeleteStory }) => {
+const StoryViewer = ({ stories, initialIndex, onClose }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
-  const [showMenu, setShowMenu] = useState(false);
 
   const currentStory = stories[currentIndex];
 
@@ -53,21 +51,6 @@ const StoryViewer = ({ stories, initialIndex, onClose, isOwnProfile, onDeleteSto
       goToPreviousStory(); // Swipe right to go to the previous story
     } else if (deltaX < -50) {
       goToNextStory(); // Swipe left to go to the next story
-    }
-  };
-
-  // Handle delete story
-  const handleDeleteStory = async () => {
-    if (isOwnProfile) {
-      try {
-        // Call the parent function to delete the story
-        await onDeleteStory(currentStory._id);
-        toast.success("Story deleted successfully");
-        onClose(); // Close the viewer after deletion
-      } catch (error) {
-        console.error("Error deleting story:", error);
-        toast.error("Failed to delete story.");
-      }
     }
   };
 
