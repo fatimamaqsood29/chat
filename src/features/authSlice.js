@@ -20,12 +20,14 @@ const authSlice = createSlice({
       localStorage.setItem("access_token", access_token);
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("user_id", user.id); // Store user ID separately
-
-      console.log("Login Success - Token and User ID stored in localStorage:", {
+      console.log("Login Success - Token and User ID stored in loc",{
+        user,
         access_token,
-        user_id: user.id,
-      }); // Debugging
+        user_id : user.id,
+      });
+
     },
+    
     logout: (state) => {
       state.token = null;
       state.user = null;
@@ -34,8 +36,8 @@ const authSlice = createSlice({
       localStorage.removeItem("access_token");
       localStorage.removeItem("user");
       localStorage.removeItem("user_id"); // Clear user ID
-
-      console.log("Logout - LocalStorage cleared"); // Debugging
+      console.log("Logout - LocalStorage cleared");
+      
     },
   },
 });

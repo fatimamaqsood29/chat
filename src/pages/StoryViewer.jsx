@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
-const StoryViewer = ({ stories, initialIndex, onClose }) => {
+const StoryViewer = ({ stories, initialIndex, onClose, isOwnProfile, onDeleteStory }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
 
   const currentStory = stories[currentIndex];
 
@@ -51,6 +53,21 @@ const StoryViewer = ({ stories, initialIndex, onClose }) => {
       goToPreviousStory(); // Swipe right to go to the previous story
     } else if (deltaX < -50) {
       goToNextStory(); // Swipe left to go to the next story
+    }
+  };
+
+  // Handle delete story
+  const handleDeleteStory = async () => {
+    if (isOwnProfile) {
+      try {
+        // Call the parent function to delete the story
+        await onDeleteStory(currentStory._id);
+        toast.success("Story deleted successfully");
+        onClose(); // Close the viewer after deletion
+      } catch (error) {
+        console.error("Error deleting story:", error);
+        toast.error("Failed to delete story.");
+      }
     }
   };
 
@@ -109,6 +126,26 @@ const StoryViewer = ({ stories, initialIndex, onClose }) => {
         >
           &#10095;
         </button>
+
+        {/* Menu and Delete Button for Own Stories */}
+        {isOwnProfile && (
+          <div className="absolute top-4 right-12">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="text-white text-2xl"
+            >
+              &#8942; {/* Three dots icon */}
+            </button>
+            {showMenu && (
+              <button
+                onClick={handleDeleteStory}
+                className="absolute right-0 top-8 text-white text-sm bg-red-500 px-3 py-1 rounded-lg"
+              >
+                Delete
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
