@@ -6,7 +6,6 @@ import "react-toastify/dist/ReactToastify.css";
 import { Box } from "@mui/material";
 import {
   ProfileHeader,
-  ProfileStats,
   TabsSection,
   PostsGrid,
   FollowDialog,
@@ -37,7 +36,7 @@ function ProfileScreen() {
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogType, setDialogType] = useState("");
 
-  const { stories, loading: storiesLoading, error: storiesError } = useSelector((state) => state.story);
+  const { stories } = useSelector((state) => state.story);
 
   useEffect(() => {
     if (!loggedInUserId || !token) {
@@ -60,7 +59,7 @@ function ProfileScreen() {
     }
     fetchUserPosts();
     dispatch(fetchFollowingStories());
-  }, [userId, location.key]);
+  }, [userId, location.key, dispatch]);
 
   const fetchProfileData = async () => {
     try {
@@ -142,7 +141,11 @@ function ProfileScreen() {
   const handleDeleteStory = async (storyId) => {
     try {
       await dispatch(deleteStory(storyId)).unwrap();
+<<<<<<< HEAD
       toast.success("Story deleted successfully!");
+=======
+      toast.success('Story deleted successfully!');
+>>>>>>> parent of 0318797 (Revert "style profile")
       dispatch(fetchFollowingStories());
     } catch (error) {
       toast.error("Failed to delete story");
@@ -204,10 +207,7 @@ function ProfileScreen() {
         isOwnProfile={isOwnProfile}
         loggedInUserId={loggedInUserId}
         onStoryUpload={handleStoryUpload}
-        onDeleteStory={handleDeleteStory} 
-        stories={stories}
-      />
-      <ProfileStats
+        onDeleteStory={handleDeleteStory}
         totalPosts={totalPosts}
         followersCount={profileFollowers.length}
         followingCount={profileFollowing.length}
@@ -217,9 +217,16 @@ function ProfileScreen() {
         selectedTab={selectedTab}
         onTabChange={(e, newValue) => setSelectedTab(newValue)}
       />
+<<<<<<< HEAD
       {selectedTab === "post" && (
         <PostsGrid uploadedImages={uploadedImages} fetchPosts={fetchUserPosts} />
       )}
+=======
+      {selectedTab === 'post' && (
+        <PostsGrid uploadedImages={uploadedImages} fetchPosts={fetchUserPosts} />
+      )}
+      {isOwnProfile && <Highlights userId={userId} token={token} />}
+>>>>>>> parent of 0318797 (Revert "style profile")
       <FollowDialog
         open={openDialog}
         type={dialogType}

@@ -6,6 +6,10 @@ import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import { setCurrentChatroom, createChatroom } from "../../features/chatSlice";
+<<<<<<< HEAD
+=======
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+>>>>>>> parent of 0318797 (Revert "style profile")
 
 export const ProfileHeader = ({
   profileData,
@@ -14,6 +18,10 @@ export const ProfileHeader = ({
   loggedInUserId,
   onStoryUpload,
   onDeleteStory,
+  totalPosts,
+  followersCount,
+  followingCount,
+  onStatClick,
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -22,7 +30,7 @@ export const ProfileHeader = ({
   const [highlights, setHighlights] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Retrieve userId from localStorage if not passed as a prop
+  // Retrieve userId from prop or localStorage
   const userId =
     propUserId ||
     localStorage.getItem("user_id") ||
@@ -36,7 +44,11 @@ export const ProfileHeader = ({
         `${import.meta.env.VITE_API_BASE_URL}/api/posts/stories/me`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+<<<<<<< HEAD
       setStories(response.data);
+=======
+      return response.data;
+>>>>>>> parent of 0318797 (Revert "style profile")
     } catch (error) {
       console.error("Error fetching stories:", error);
       toast.error("Failed to fetch stories.");
@@ -93,7 +105,6 @@ export const ProfileHeader = ({
     }
   };
 
-  // Load stories when the component mounts
   useEffect(() => {
     if (isOwnProfile) {
       fetchStories();
@@ -101,17 +112,16 @@ export const ProfileHeader = ({
     }
   }, [isOwnProfile]);
 
-  // Check the follow status only if viewing someone else's profile
+  // Check follow status when viewing another profile
   useEffect(() => {
-    if (!isOwnProfile) {
-      profileData?.followers?.forEach((followerId) => {
+    if (!isOwnProfile && profileData?.followers) {
+      profileData.followers.forEach((followerId) => {
         if (followerId === loggedInUserId) {
           setIsFollowing(true);
-          return;
         }
       });
     }
-  }, [profileData, loggedInUserId, isOwnProfile, userId]);
+  }, [profileData, loggedInUserId, isOwnProfile]);
 
   const handleCreateChatroom = async (participantId) => {
     try {
@@ -127,7 +137,6 @@ export const ProfileHeader = ({
     }
   };
 
-  // Handle follow/unfollow action
   const handleFollow = async () => {
     try {
       const token = localStorage.getItem("access_token");
@@ -140,7 +149,6 @@ export const ProfileHeader = ({
       const endpoint = isFollowing
         ? `${import.meta.env.VITE_API_BASE_URL}/api/users/unfollow/${userId}`
         : `${import.meta.env.VITE_API_BASE_URL}/api/users/follow/${userId}`;
-
       const method = isFollowing ? "delete" : "post";
 
       const response = await axios[method](
@@ -152,7 +160,9 @@ export const ProfileHeader = ({
       if (response.data.message) {
         setIsFollowing(!isFollowing);
         toast.success(
-          isFollowing ? "You have unfollowed this user." : "You are now following this user."
+          isFollowing
+            ? "You have unfollowed this user."
+            : "You are now following this user."
         );
       }
     } catch (error) {
@@ -169,11 +179,10 @@ export const ProfileHeader = ({
     }
   };
 
-  // Handle story deletion
   const handleDeleteStory = async (storyId) => {
     try {
       await onDeleteStory(storyId);
-      setStories((prevStories) => prevStories.filter((s) => s._id !== storyId)); // Remove deleted story
+      setStories((prevStories) => prevStories.filter((s) => s._id !== storyId));
       toast.success("Story deleted successfully");
     } catch (error) {
       console.error("Error deleting story:", error);
@@ -183,89 +192,110 @@ export const ProfileHeader = ({
 
   return (
     <Box display="flex" flexDirection="column" gap={3}>
-      {/* Profile Info Section */}
-      <Box display="flex" alignItems="center" justifyContent="space-between">
-        <Box display="flex" alignItems="center" gap={3}>
-          {/* Profile Picture with Story Upload */}
-          <Box position="relative">
-            <Avatar
-              src={profileData.profileImage}
-              alt={profileData.name}
-              sx={{ width: 80, height: 80 }}
-            />
-            {isOwnProfile && (
-              <IconButton
-                component="label"
-                sx={{
-                  position: "absolute",
-                  bottom: 0,
-                  right: 0,
-                  backgroundColor: "primary.main",
-                  color: "white",
-                  "&:hover": { backgroundColor: "primary.dark" },
-                  p: 0.5, // Reduced padding for a smaller button
-                }}
-              >
-                <AddPhotoAlternateIcon sx={{ fontSize: 18 }} /> {/* Reduced icon size */}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={onStoryUpload}
-                  style={{ display: "none" }}
-                />
-              </IconButton>
-            )}
-          </Box>
-          <Box>
+      {/* Top Section: Profile Image, Details & Stats */}
+      <Box display="flex" gap={4} alignItems="center">
+        {/* Profile Image with Story Upload */}
+        <Box position="relative">
+          <Avatar
+            src={profileData.profileImage}
+            alt={profileData.name}
+            sx={{ width: { xs: 80, sm: 150 }, height: { xs: 80, sm: 150 } }}
+          />
+          {isOwnProfile && (
+            <IconButton
+              component="label"
+              sx={{
+                position: "absolute",
+                bottom: 0,
+                right: 0,
+                backgroundColor: "primary.main",
+                color: "white",
+                "&:hover": { backgroundColor: "primary.dark" },
+                p: 0.5,
+              }}
+            >
+              <AddPhotoAlternateIcon sx={{ fontSize: 18 }} />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={onStoryUpload}
+                style={{ display: "none" }}
+              />
+            </IconButton>
+          )}
+        </Box>
+
+        {/* Profile Details & Stats */}
+        <Box flexGrow={1}>
+          <Box display="flex" alignItems="center" gap={140}>
             <Typography variant="h5" sx={{ fontWeight: "bold" }}>
               {profileData.name}
             </Typography>
+            {isOwnProfile ? (
+              <Button
+                variant="outlined"
+                onClick={() =>
+                  navigate("/edit-profile", { state: { profileData, userId } })
+                }
+              >
+                Edit Profile
+              </Button>
+            ) : (
+              <Box display="flex" gap={2}>
+                <Button
+                  variant={isFollowing ? "outlined" : "contained"}
+                  color={isFollowing ? "secondary" : "primary"}
+                  onClick={handleFollow}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: "bold",
+                    width: "100px",
+                  }}
+                >
+                  {isFollowing ? "Following" : "Follow"}
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleMessageInteraction}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Message
+                </Button>
+              </Box>
+            )}
+          </Box>
+
+          {/* Stats */}
+          <Box display="flex" gap={4} mt={2}>
+            <Box onClick={() => onStatClick("posts")} sx={{ cursor: "pointer" }}>
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                {totalPosts} Posts
+              </Typography>
+            </Box>
+            <Box onClick={() => onStatClick("followers")} sx={{ cursor: "pointer" }}>
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                {followersCount} Followers
+              </Typography>
+            </Box>
+            <Box onClick={() => onStatClick("following")} sx={{ cursor: "pointer" }}>
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                {followingCount} Following
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Bio */}
+          <Box mt={2}>
             <Typography variant="body1">{profileData.bio}</Typography>
           </Box>
         </Box>
-
-        {/* Buttons Section */}
-        {isOwnProfile ? (
-          <Button
-            variant="outlined"
-            onClick={() =>
-              navigate("/edit-profile", { state: { profileData, userId } })
-            }
-          >
-            Edit Profile
-          </Button>
-        ) : (
-          <Box display="flex" gap={2}>
-            {/* Follow/Unfollow Button */}
-            <Button
-              variant={isFollowing ? "outlined" : "contained"}
-              color={isFollowing ? "secondary" : "primary"}
-              onClick={handleFollow}
-              sx={{
-                textTransform: "none",
-                fontWeight: "bold",
-                width: "100px",
-              }}
-            >
-              {isFollowing ? "Following" : "Follow"}
-            </Button>
-
-            {/* Message Button */}
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleMessageInteraction}
-              sx={{
-                textTransform: "none",
-                fontWeight: "bold",
-              }}
-            >
-              Message
-            </Button>
-          </Box>
-        )}
       </Box>
 
+<<<<<<< HEAD
       {/* Highlights Section */}
       {isOwnProfile && (
         <Box sx={{ mt: 2 }}>
@@ -315,6 +345,53 @@ export const ProfileHeader = ({
               </Box>
             </Box>
           </Box>
+=======
+      {/* Stories Section */}
+      {stories && stories.length > 0 && (
+        <Box display="flex" gap={2} overflow="auto" py={2}>
+          {stories.map((story) => (
+            <Box
+              key={story._id}
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              gap={1}
+              sx={{ cursor: "pointer" }}
+              onClick={() => {
+                if (story.user?._id) {
+                  navigate(`/stories/${story.user._id}`);
+                } else {
+                  console.error("Story user ID is undefined:", story);
+                  toast.error("Failed to load story. User ID is missing.");
+                }
+              }}
+            >
+              <Avatar
+                src={story.imageUrl}
+                alt="Story"
+                sx={{
+                  width: 60,
+                  height: 60,
+                  border: "2px solid",
+                  borderColor: "primary.main",
+                }}
+              />
+              {isOwnProfile && (
+                <Button
+                  variant="text"
+                  color="error"
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteStory(story._id);
+                  }}
+                >
+                  Delete
+                </Button>
+              )}
+            </Box>
+          ))}
+>>>>>>> parent of 0318797 (Revert "style profile")
         </Box>
       )}
     </Box>

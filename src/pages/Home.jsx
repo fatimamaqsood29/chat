@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, } from "react-redux";
 import { fetchPosts } from "../features/postSlice";
 import { fetchSuggestions } from "../features/followSlice";
 import { useThemeContext } from "../ThemeContext";
@@ -21,26 +21,6 @@ const Home = () => {
   const suggestionsLoading = useSelector((state) => state.follow.loading);
   const storiesLoading = useSelector((state) => state.story.loading);
 
-  // Get logged-in user ID from localStorage
-  const loggedInUserId = localStorage.getItem("user_id");
-
-  // Function to delete a story
-  const handleDeleteStory = async (storyId) => {
-    try {
-      const token = localStorage.getItem("access_token");
-      const response = await axios.delete(
-        `${import.meta.env.VITE_API_BASE_URL}/api/posts/stories/${storyId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (response.data.message) {
-        toast.success("Story deleted successfully");
-        dispatch(fetchFollowingStories()); // Refresh stories after deletion
-      }
-    } catch (error) {
-      console.error("Error deleting story:", error);
-      toast.error("Failed to delete story.");
-    }
-  };
 
   // Get logged-in user ID from localStorage
   const loggedInUserId = localStorage.getItem("user_id");

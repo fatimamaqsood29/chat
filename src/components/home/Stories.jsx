@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import StoryViewer from "../../pages/StoryViewer";
 
-const Stories = ({ darkMode, stories, loading, loggedInUserId, onDeleteStory }) => {
+const Stories = ({ darkMode, stories, loading, onDeleteStory }) => {
   const [selectedStoryIndex, setSelectedStoryIndex] = useState(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
 
